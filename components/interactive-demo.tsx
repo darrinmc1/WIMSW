@@ -29,7 +29,8 @@ export function InteractiveDemo() {
     { category: "damage", label: "Damage/Wear", description: "Flaws if any (optional)", image: null },
   ])
 
-  const mockAnalysis = {
+  // Initial mock data as default
+  const defaultAnalysis = {
     brand: "Nike",
     item: "Air Max 90 Sneakers",
     condition: "Good - Minor wear visible on soles",
@@ -93,6 +94,9 @@ export function InteractiveDemo() {
     ],
   }
 
+  const [analysis, setAnalysis] = useState(defaultAnalysis)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -108,9 +112,59 @@ export function InteractiveDemo() {
     setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: null } : photo)))
   }
 
-  const handleAnalyze = () => {
-    setIsAnalyzed(true)
-    setExpandedPlatform("Depop") // Auto-expand recommended
+  const handleAnalyze = async () => {
+    const frontPhoto = photos.find(p => p.category === "front")?.image
+    if (!frontPhoto) return
+
+    setIsAnalyzing(true)
+    try {
+      // Call the API
+      const response = await fetch("/api/analyze-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: frontPhoto }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        const { brand, name, estimated_price } = data.data
+        const searchTerm = encodeURIComponent(`${brand} ${name}`)
+
+        // Update analysis with real data
+        setAnalysis(prev => ({
+          ...prev,
+          brand: brand,
+          item: name,
+          suggestedPrice: `$${estimated_price}`,
+          platforms: prev.platforms.map(p => {
+            // Create real search URL
+            let realUrl = ""
+            if (p.name === "eBay") realUrl = `https://www.ebay.com/sch/i.html?_nkw=${searchTerm}`
+            if (p.name === "Poshmark") realUrl = `https://poshmark.com/search?query=${searchTerm}`
+            if (p.name === "Depop") realUrl = `https://www.depop.com/search/?q=${searchTerm}`
+
+            // Update listing title dynamically
+            let newListing = p.listing.replace(/Nike Air Max 90/gi, name).replace(/Nike/gi, brand)
+
+            return {
+              ...p,
+              url: realUrl,
+              listing: newListing,
+              price: `$${estimated_price}`,
+              net: `$${(estimated_price * 0.85).toFixed(2)}` // Approx net calc
+            }
+          })
+        }))
+      }
+    } catch (error) {
+      console.error("Demo analysis failed", error)
+      // Fallback to default/mock is already handled by initial state
+    } finally {
+      setIsAnalyzing(false)
+      setIsAnalyzed(true)
+      setExpandedPlatform("Depop")
+    }
   }
 
   const handleCopy = (platform: string) => {
@@ -230,12 +284,12 @@ export function InteractiveDemo() {
                 <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4 bg-card border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                     <div className="text-sm text-muted-foreground mb-1">Estimated Value</div>
-                    <div className="text-2xl font-bold text-foreground">{mockAnalysis.suggestedPrice}</div>
+                    <div className="text-2xl font-bold text-foreground">{analysis.suggestedPrice}</div>
                   </Card>
                   <Card className="p-4 bg-card border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
                     <div className="text-sm text-muted-foreground mb-1">Best Platform</div>
                     <div className="text-2xl font-bold text-green-500 flex items-center gap-2">
-                      {mockAnalysis.recommendation.platform}
+                      {analysis.recommendation.platform}
                       <TrendingUp size={20} />
                     </div>
                   </Card>
@@ -256,8 +310,8 @@ export function InteractiveDemo() {
                       <div>Speed</div>
                       <div>Draft</div>
                     </div>
-                    {mockAnalysis.platforms.map((p) => (
-                      <div key={p.name} className={`grid grid-cols-4 p-4 items-center gap-2 transition-colors hover:bg-muted/10 ${p.name === mockAnalysis.recommendation.platform ? "bg-green-500/5" : ""}`}>
+                    {analysis.platforms.map((p) => (
+                      <div key={p.name} className={`grid grid-cols-4 p-4 items-center gap-2 transition-colors hover:bg-muted/10 ${p.name === analysis.recommendation.platform ? "bg-green-500/5" : ""}`}>
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-foreground">{p.name}</span>
                           <a href={(p as any).url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
@@ -284,7 +338,7 @@ export function InteractiveDemo() {
                 {/* Listings & Instructions */}
                 <div className="space-y-4">
                   <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider text-muted-foreground">Generated Listings & Settings</h4>
-                  {mockAnalysis.platforms.map((platform) => (
+                  {analysis.platforms.map((platform) => (
                     <Card key={platform.name} className={`overflow-hidden transition-all duration-300 ${expandedPlatform === platform.name ? "ring-2 ring-primary/50" : "hover:border-primary/50"}`}>
                       <div
                         className="p-4 bg-card/40 border-b border-border/50 cursor-pointer flex items-center justify-between"
@@ -301,7 +355,7 @@ export function InteractiveDemo() {
                           >
                             <ExternalLink size={14} />
                           </a>
-                          {platform.name === mockAnalysis.recommendation.platform && (
+                          {platform.name === analysis.recommendation.platform && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500 text-white">RECOMMENDED</span>
                           )}
                         </div>
