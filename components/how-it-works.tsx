@@ -5,8 +5,8 @@ export function HowItWorks() {
   const steps = [
     {
       icon: Camera,
-      title: "Upload Photo",
-      description: "Take a photo of your clothing item with your phone",
+      title: "Upload Some Photos",
+      description: "Take some photos of your clothing item with your phone",
       number: "01",
     },
     {

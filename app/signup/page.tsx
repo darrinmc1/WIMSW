@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams } from 'next/navigation'
+import { BrandName } from '@/components/brand-name'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -66,7 +67,7 @@ function SignupContent() {
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
                     <p className="text-gray-600 mt-2">
-                        {plan ? `Sign up for the ${plan} plan` : 'Start your journey with ResaleAI'}
+                        {plan ? `Sign up for the ${plan} plan` : <BrandName />}
                     </p>
                 </div>
 

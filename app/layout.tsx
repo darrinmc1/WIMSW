@@ -8,27 +8,18 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ResaleAI - Turn Your Closet Into Cash with AI",
+  title: "WIMSW.com - What Is My Stuff Worth?",
   description:
-    "AI-powered pricing and listing tools for secondhand clothing resellers. Get accurate prices and optimized listings for eBay, Poshmark, Depop, and more.",
-  generator: "v0.app",
-  keywords: ["resale", "AI pricing", "clothing resale", "eBay", "Poshmark", "Depop", "secondhand", "thrift"],
+    "Instant AI-powered market research and pricing for your secondhand items. Find out what your stuff is worth on eBay, Poshmark, and more.",
+  generator: "WIMSW",
+  keywords: ["resale", "AI pricing", "clothing resale", "eBay", "Poshmark", "Depop", "secondhand", "value check"],
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/favicon.ico",
+        sizes: "any",
       },
     ],
-    apple: "/apple-icon.png",
   },
 }
 

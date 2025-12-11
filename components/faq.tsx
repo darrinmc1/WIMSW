@@ -1,4 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { BrandName } from "@/components/brand-name"
 
 export function FAQ() {
   const faqs = [
@@ -34,12 +35,12 @@ export function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground text-balance">Frequently Asked <span className="text-gradient">Questions</span></h2>
-          <p className="text-xl text-muted-foreground text-pretty">Everything you need to know about ResaleAI</p>
+          <p className="text-xl text-muted-foreground text-pretty">Everything you need to know about <BrandName /></p>
         </div>
 
         <Accordion type="single" collapsible className="space-y-4">
           {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="glass-panel border border-white/5 rounded-lg px-6 data-[state=open]:border-primary/50 transition-colors">
+            <AccordionItem key={index} value={`item - ${index} `} className="glass-panel border border-white/5 rounded-lg px-6 data-[state=open]:border-primary/50 transition-colors">
               <AccordionTrigger className="text-left text-foreground hover:text-primary transition-colors py-6 text-lg">
                 {faq.question}
               </AccordionTrigger>

@@ -81,23 +81,40 @@ export function MarketResearch() {
     const [itemDetails, setItemDetails] = useState<AnalyzedItem | null>(null)
     const resultsRef = useRef<HTMLDivElement>(null)
 
-    // const fileInputRef = useRef<HTMLInputElement>(null) // No longer needed with individual inputs
+    // Use a map of refs for file inputs to avoid ID conflicts
+    const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, slot: 'front' | 'back' | 'label' | 'damage') => {
         const file = e.target.files?.[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                const base64String = reader.result as string
-                setImagePreview(prev => ({ ...prev!, [slot]: base64String }))
+        if (!file) return
+
+        // File Validation
+        if (!file.type.startsWith('image/')) {
+            setError("Please upload a valid image file (JPG, PNG)")
+            return
+        }
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            setError("Image size too large. Please upload an image under 10MB.")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            // Validate result is a string
+            if (typeof reader.result === 'string') {
+                const base64String = reader.result
+                setImagePreview(prev => (prev ? { ...prev, [slot]: base64String } : null))
 
                 // Only analyze if it's the front image (primary)
                 if (slot === 'front') {
                     analyzeImage(base64String)
                 }
             }
-            reader.readAsDataURL(file)
         }
+        reader.readAsDataURL(file)
+
+        // Reset input so same file can be selected again
+        e.target.value = ''
     }
 
     const analyzeImage = async (base64Image: string) => {
@@ -217,55 +234,10 @@ export function MarketResearch() {
                     <div className="md:col-span-1 space-y-6">
                         {/* 4-Grid Image Upload */}
                         <div className="grid grid-cols-2 gap-4">
-                            {['Front View', 'Back View', 'Brand Label', 'Damage/Wear'].map((label, index) => {
-                                const slotName = ['front', 'back', 'label', 'damage'][index] as 'front' | 'back' | 'label' | 'damage';
-                                const currentImage = imagePreview?.[slotName];
-
-                                return (
-                                    <div
-                                        key={slotName}
-                                        onClick={() => {
-                                            // Trigger hidden input for this specific slot
-                                            document.getElementById(`file-input-${slotName}`)?.click();
-                                        }}
-                                        className="aspect-square bg-white rounded-xl shadow-sm border-2 border-dashed border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all cursor-pointer flex flex-col items-center justify-center relative group overflow-hidden"
-                                    >
-                                        {currentImage ? (
-                                            <>
-                                                <img src={currentImage} alt={label} className="w-full h-full object-cover" />
-                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-full"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setImagePreview(prev => prev ? ({ ...prev, [slotName]: null }) : null);
-                                                        }}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="p-2 bg-indigo-50 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                                                    <Camera className="w-5 h-5 text-indigo-500" />
-                                                </div>
-                                                <span className="text-xs font-medium text-gray-500 text-center px-1">{label}</span>
-                                            </>
-                                        )}
-                                        <input
-                                            id={`file-input-${slotName}`}
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => handleImageUpload(e, slotName)}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    </div>
-                                )
-                            })}
+                            {renderUploadCard('Front View', 'front', frontRef)}
+                            {renderUploadCard('Back View', 'back', backRef)}
+                            {renderUploadCard('Brand Label', 'label', labelRef)}
+                            {renderUploadCard('Damage/Wear', 'damage', damageRef)}
                         </div>
 
                         {/* Description Field */}

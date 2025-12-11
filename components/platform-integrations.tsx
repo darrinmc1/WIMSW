@@ -35,9 +35,9 @@ export function PlatformIntegrations() {
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-background to-secondary/20">
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-foreground text-balance">Sell Everywhere</h2>
+          <h2 className="text-4xl sm:text-5xl font-bold text-foreground text-balance">Sell on Top Platforms</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Optimized listings for every major resale platform
+            Optimized listings for major resale platforms
           </p>
         </div>
 
@@ -57,8 +57,8 @@ export function PlatformIntegrations() {
 
         <div className="mt-12 text-center">
           <Link href="/signup">
-            <Button size="lg" className="bg-background text-foreground border-2 border-indigo-600 hover:bg-indigo-50 px-8 py-6 text-lg rounded-full font-bold shadow-md hover:shadow-lg transition-all hover:scale-105">
-              Start Selling Everywhere
+            <Button size="lg" className="bg-background text-foreground border-2 border-indigo-600 hover:bg-indigo-50 hover:text-indigo-600 px-8 py-6 text-lg rounded-full font-bold shadow-md hover:shadow-lg transition-all hover:scale-105">
+              Start Cross-Listing Today
             </Button>
           </Link>
         </div>

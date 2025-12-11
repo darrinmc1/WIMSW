@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
+import { BrandName } from "@/components/brand-name"
 import Link from "next/link"
 
 export function Footer() {
@@ -36,9 +37,9 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">R</span>
+                <span className="text-white font-bold text-lg">W</span>
               </div>
-              <span className="text-xl font-bold text-foreground">ResaleAI</span>
+              <BrandName className="text-xl font-bold text-foreground" />
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               AI-powered pricing and listing tools for secondhand clothing resellers.
@@ -95,7 +96,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} ResaleAI. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} What Is My Stuff Worth. All rights reserved.</p>
 
           <div className="flex gap-4">
             {socials.map((social, index) => (

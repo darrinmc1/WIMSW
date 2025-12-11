@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { BrandName } from "@/components/brand-name"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
@@ -36,10 +37,12 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
+
+
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <span className="text-white font-bold text-lg">R</span>
+              <span className="text-white font-bold text-lg">W</span>
             </div>
-            <span className="text-xl font-bold text-foreground">ResaleAI</span>
+            <BrandName className="text-xl font-bold text-foreground" />
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
@@ -50,7 +53,7 @@ export function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
               >
                 {item.label}
               </Link>

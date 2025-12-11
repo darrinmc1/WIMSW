@@ -1,9 +1,29 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useState, useEffect } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 
 export function Hero() {
+  const headings = [
+    "Turn Your Closet Into Cash with AI",
+    "Instant Market Value for Your Stuff",
+    "Maximize Profit on Every Item",
+    "Resell Smarter, Not Harder"
+  ]
+
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % headings.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Effects */}
@@ -21,9 +41,27 @@ export function Hero() {
               </span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-balance">
-              Turn Your Closet Into <span className="text-gradient">Cash with AI</span>
-            </h1>
+            <div className="h-[180px] sm:h-[200px] lg:h-[240px] flex items-center">
+              <AnimatePresence mode="wait">
+                <motion.h1
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-balance"
+                >
+                  {headings[index].split(' ').map((word, i) => {
+                    const isHighlighted = ["Cash", "AI", "Value", "Profit", "Smarter"].some(k => word.includes(k))
+                    return isHighlighted ? (
+                      <span key={i} className="text-gradient"> {word}</span>
+                    ) : (
+                      <span key={i}> {word}</span>
+                    )
+                  })}
+                </motion.h1>
+              </AnimatePresence>
+            </div>
 
             <p className="text-xl text-muted-foreground leading-relaxed text-pretty max-w-lg">
               Stop guessing. Our AI analyzes your photos, researches market prices, and creates optimized

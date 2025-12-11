@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { BrandName } from "@/components/brand-name"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Check, Copy, X, Camera, TrendingUp, DollarSign, Settings, Info } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Check, Copy, X, Camera, TrendingUp, DollarSign, Settings, Info, ExternalLink } from "lucide-react"
 
 type PhotoCategory = "front" | "back" | "label" | "damage"
 
@@ -18,6 +20,7 @@ export function InteractiveDemo() {
   const [isAnalyzed, setIsAnalyzed] = useState(false)
   const [copiedPlatform, setCopiedPlatform] = useState<string | null>(null)
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null)
+  const [userDescription, setUserDescription] = useState("")
 
   const [photos, setPhotos] = useState<PhotoSlot[]>([
     { category: "front", label: "Front View", description: "Main photo of item", image: null },
@@ -44,6 +47,7 @@ export function InteractiveDemo() {
         net: "$82.45",
         speed: "Fast (1-3 days)",
         demand: "High",
+        url: "https://www.ebay.com/sch/i.html?_nkw=Nike+Air+Max+90+Sneakers",
         instructions: "List as 'Buy It Now'. Use the 7-day duration if auctioning, but fixed price is recommended for this item.",
         settings: [
           "Category: Clothing, Shoes & Accessories > Men > Men's Shoes > Athletic Shoes",
@@ -60,6 +64,7 @@ export function InteractiveDemo() {
         net: "$84.00",
         speed: "Medium (3-7 days)",
         demand: "Medium",
+        url: "https://poshmark.com/search?query=Nike%20Air%20Max%2090%20Sneakers",
         instructions: "Share to evening parties for better visibility. Send offers to likers 1 hour after they like.",
         settings: [
           "Category: Men > Shoes > Sneakers",
@@ -76,6 +81,7 @@ export function InteractiveDemo() {
         net: "$99.00",
         speed: "Fast (1-5 days)",
         demand: "Very High",
+        url: "https://www.depop.com/search/?q=Nike%20Air%20Max%2090%20Sneakers",
         instructions: "Refresh listing daily. Use all 5 hashtags. Message buyers who like the item with a 10% discount.",
         settings: [
           "Category: Menswear > Footwear > Sneakers",
@@ -87,10 +93,15 @@ export function InteractiveDemo() {
     ],
   }
 
-  const handlePhotoUpload = (category: PhotoCategory) => {
-    // Simulate file upload - in production would handle actual file input
-    const dummyImage = `/placeholder.svg?height=300&width=300&query=${category}-view-clothing`
-    setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: dummyImage } : photo)))
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: reader.result as string } : photo)))
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleRemovePhoto = (category: PhotoCategory) => {
@@ -121,8 +132,12 @@ export function InteractiveDemo() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground text-balance">Try It Out</h2>
+
+
+
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-            See how ResaleAI analyzes your items and finds the estimated profit across all platforms.
+            See how <BrandName /> analyzes your items and finds the estimated profit across all platforms.
           </p>
         </div>
 
@@ -130,6 +145,12 @@ export function InteractiveDemo() {
           {/* Left Column: Upload */}
           <Card className="p-6 bg-card border-border h-full flex flex-col">
             <h3 className="text-2xl font-semibold text-foreground mb-6">1. Upload Photos</h3>
+
+            <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20 mb-6">
+              <strong className="block mb-1">💡 Pro Tip</strong>
+              Clear lighting and brand tags help our AI identify precise models to maximize your profit.
+            </div>
+
             <div className="grid grid-cols-2 gap-4 flex-1 content-start">
               {photos.map((photo) => (
                 <div key={photo.category} className="space-y-2">
@@ -138,7 +159,7 @@ export function InteractiveDemo() {
                     {photo.image ? (
                       <>
                         <img
-                          src={photo.image || "/placeholder.svg"}
+                          src={photo.image}
                           alt={photo.label}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
@@ -150,15 +171,18 @@ export function InteractiveDemo() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => handlePhotoUpload(photo.category)}
-                        className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer"
-                      >
+                      <label className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handlePhotoUpload(e, photo.category)}
+                        />
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                           <Camera className="text-primary" size={20} />
                         </div>
                         <span className="text-xs text-muted-foreground text-center px-2">{photo.description}</span>
-                      </button>
+                      </label>
                     )}
                   </div>
                 </div>
@@ -166,10 +190,17 @@ export function InteractiveDemo() {
             </div>
 
             <div className="mt-6 space-y-4">
-              <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20">
-                <strong className="block mb-1">💡 Pro Tip</strong>
-                Clear lighting and brand tags help our AI identify precise models to maximize your profit.
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">Optional Description</label>
+                <Textarea
+                  placeholder="Add a description or AI will work it out"
+                  value={userDescription}
+                  onChange={(e) => setUserDescription(e.target.value)}
+                  className="bg-card/50 resize-none min-h-[80px]"
+                />
               </div>
+
+
 
               <Button
                 onClick={handleAnalyze}
@@ -227,7 +258,12 @@ export function InteractiveDemo() {
                     </div>
                     {mockAnalysis.platforms.map((p) => (
                       <div key={p.name} className={`grid grid-cols-4 p-4 items-center gap-2 transition-colors hover:bg-muted/10 ${p.name === mockAnalysis.recommendation.platform ? "bg-green-500/5" : ""}`}>
-                        <div className="font-semibold">{p.name}</div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-foreground">{p.name}</span>
+                          <a href={(p as any).url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
                         <div>
                           <div className="font-bold text-foreground">{p.net}</div>
                           <div className="text-xs text-muted-foreground">List: {p.price}</div>
@@ -256,6 +292,15 @@ export function InteractiveDemo() {
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-foreground">{platform.name}</span>
+                          <a
+                            href={(platform as any).url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors p-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink size={14} />
+                          </a>
                           {platform.name === mockAnalysis.recommendation.platform && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500 text-white">RECOMMENDED</span>
                           )}
@@ -303,7 +348,7 @@ export function InteractiveDemo() {
             )}
           </div>
         </div>
-      </div>
-    </section>
+      </div >
+    </section >
   )
 }
