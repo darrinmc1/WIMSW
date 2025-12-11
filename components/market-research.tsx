@@ -209,6 +209,42 @@ export function MarketResearch() {
         }
     }
 
+    const renderUploadCard = (label: string, slot: 'front' | 'back' | 'label' | 'damage') => {
+        const preview = imagePreview?.[slot]
+
+        return (
+            <Card
+                key={slot}
+                onClick={() => fileInputRefs.current[slot]?.click()}
+                className={`relative aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
+            >
+                <input
+                    type="file"
+                    ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, slot)}
+                />
+
+                {preview ? (
+                    <div className="absolute inset-0 w-full h-full">
+                        <img src={preview} alt={label} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload className="text-white h-8 w-8" />
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                            <Camera className="h-6 w-6" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-700 text-center px-2">{label}</span>
+                    </>
+                )}
+            </Card>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -234,10 +270,10 @@ export function MarketResearch() {
                     <div className="md:col-span-1 space-y-6">
                         {/* 4-Grid Image Upload */}
                         <div className="grid grid-cols-2 gap-4">
-                            {renderUploadCard('Front View', 'front', frontRef)}
-                            {renderUploadCard('Back View', 'back', backRef)}
-                            {renderUploadCard('Brand Label', 'label', labelRef)}
-                            {renderUploadCard('Damage/Wear', 'damage', damageRef)}
+                            {renderUploadCard('Front View', 'front')}
+                            {renderUploadCard('Back View', 'back')}
+                            {renderUploadCard('Brand Label', 'label')}
+                            {renderUploadCard('Damage/Wear', 'damage')}
                         </div>
 
                         {/* Description Field */}
