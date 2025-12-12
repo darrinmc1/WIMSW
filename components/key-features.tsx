@@ -1,4 +1,4 @@
-import { TrendingUp, Tag, CheckCircle, Share2 } from "lucide-react"
+import { TrendingUp, Tag, FileText, Share2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -20,9 +20,9 @@ export function KeyFeatures() {
       bg: "bg-purple-500/10",
     },
     {
-      icon: CheckCircle,
-      title: "Condition Assessment",
-      description: "AI evaluates condition to help you price fairly and describe accurately",
+      icon: FileText,
+      title: "Compelling Descriptions",
+      description: "AI generates professional, persuasive wording to highlight your item's value and help you sell faster",
       gradient: "from-emerald-500 to-teal-500",
       bg: "bg-emerald-500/10",
     },
