@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Copy, Check, ShoppingBag, Facebook, TreeDeciduous } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function CreateListingPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const { data: session, status } = useSession();
+
     const [formData, setFormData] = useState({
         name: "",
         brand: "",
@@ -24,6 +30,32 @@ export default function CreateListingPage() {
     });
     const [result, setResult] = useState<any>(null);
     const [activeTab, setActiveTab] = useState("ebay");
+
+    useEffect(() => {
+        // Protect Route
+        if (status === "unauthenticated") {
+            router.push("/login?callbackUrl=/create-listing");
+            return;
+        }
+
+        // Pre-fill from URL params
+        if (searchParams) {
+            const name = searchParams.get("name");
+            const brand = searchParams.get("brand");
+            const category = searchParams.get("category");
+            const condition = searchParams.get("condition");
+
+            if (name || brand || category) {
+                setFormData(prev => ({
+                    ...prev,
+                    name: name || "",
+                    brand: brand || "",
+                    category: category || "",
+                    condition: condition || prev.condition // Don't overwrite default string
+                }));
+            }
+        }
+    }, [searchParams, status, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });

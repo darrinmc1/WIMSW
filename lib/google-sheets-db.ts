@@ -32,7 +32,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'Users!A:G', // Columns: ID, Email, Password, Name, Plan, CreatedAt, LastLogin
+      range: 'Users!A:H', // Columns: ID, Email, Password, Name, Plan, CreatedAt, LastLogin, Role
     });
 
     const rows = response.data.values;
@@ -80,7 +80,7 @@ export async function createUser(email: string, hashedPassword: string, name?: s
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'Users!A:G',
+      range: 'Users!A:H',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
@@ -89,7 +89,6 @@ export async function createUser(email: string, hashedPassword: string, name?: s
           hashedPassword,
           name || '',
           'free', // default plan
-          createdAt,
           createdAt,
           '', // lastLogin (empty initially)
           'user', // default role

@@ -18,7 +18,8 @@ import {
     Loader2,
     Camera,
     Upload,
-    X
+    X,
+    ShoppingBag
 } from "lucide-react"
 
 // Types based on the API response structure provided
@@ -400,7 +401,24 @@ export function MarketResearch() {
                     </Card>
 
                     {searchResults && (
-                        <div className="flex flex-col sm:flex-row sm:justify-end -mt-4 mb-2">
+                        <div className="flex flex-col sm:flex-row sm:justify-end -mt-4 mb-2 gap-3">
+                            <Button
+                                onClick={() => {
+                                    if (!itemDetails) return
+                                    const params = new URLSearchParams({
+                                        name: itemDetails.name,
+                                        brand: itemDetails.brand,
+                                        category: itemDetails.category,
+                                        condition: itemDetails.condition
+                                    })
+                                    window.location.href = `/create-listing?${params.toString()}`
+                                }}
+                                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                            >
+                                <ShoppingBag className="mr-2 h-4 w-4" />
+                                Create Listing
+                            </Button>
+
                             <Button
                                 onClick={async () => {
                                     if (!searchResults || !itemDetails) return
@@ -420,11 +438,11 @@ export function MarketResearch() {
                                             })
                                         })
                                         if (response.ok) {
-                                            alert("Saved to History!")
+                                            toast.success("Saved to History!")
                                         }
                                     } catch (e) {
                                         console.error(e)
-                                        alert("Failed to save")
+                                        toast.error("Failed to save")
                                     }
                                 }}
                                 variant="outline"

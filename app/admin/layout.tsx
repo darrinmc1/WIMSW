@@ -52,6 +52,13 @@ export default async function AdminLayout({
                         <div className="px-4 py-2">
                             <p className="text-xs text-muted-foreground uppercase font-semibold mb-2">System</p>
                             <Link
+                                href="/"
+                                className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors mb-1"
+                            >
+                                <LogOut className="w-4 h-4 rotate-180" />
+                                Back to App
+                            </Link>
+                            <Link
                                 href="/api/auth/signout"
                                 className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                             >
