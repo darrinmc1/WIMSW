@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getUserByEmail, updatePassword } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { analyzeItemLimiter, getClientIdentifier, rateLimit } from "@/lib/rate-limit";
+import { changePasswordSchema, validateRequest } from "@/lib/validations";
 
 export async function POST(req: Request) {
     try {
@@ -12,32 +14,39 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // 1. Rate Limiting (Protection against brute force)
+        const identifier = getClientIdentifier(req);
+        const { success: limitSuccess, remaining, resetTime } = await rateLimit(identifier, analyzeItemLimiter);
+
+        if (!limitSuccess) {
+            return NextResponse.json(
+                { error: "Too many requests. Please try again later." },
+                {
+                    status: 429,
+                    headers: {
+                        "X-RateLimit-Limit": analyzeItemLimiter.limit.toString(), // Note: accessing private prop if needed, or hardcode
+                        "X-RateLimit-Remaining": remaining.toString(),
+                        "X-RateLimit-Reset": resetTime.toString(),
+                    },
+                }
+            );
+        }
+
         const body = await req.json();
-        const { currentPassword, newPassword } = body;
 
-        if (!currentPassword || !newPassword) {
-            return NextResponse.json(
-                { error: "Current and new password are required" },
-                { status: 400 }
-            );
+        // 2. Input Validation (Zod)
+        const validation = validateRequest(changePasswordSchema, body);
+        if (!validation.success) {
+            return NextResponse.json({ error: validation.error }, { status: 400 });
         }
 
-        if (newPassword.length < 6) {
-            return NextResponse.json(
-                { error: "New password must be at least 6 characters" },
-                { status: 400 }
-            );
-        }
+        const { currentPassword, newPassword } = validation.data;
 
         // Get user to verify current password
         const user = await getUserByEmail(session.user.email);
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
-
-        // specific check for Google Sheets users who might be using plain text initially? 
-        // No, we are assuming hashed. But let's be careful.
-        // Actually, create-user hashes it. So we should compare hash.
 
         const isValid = await bcrypt.compare(currentPassword, user.password);
 

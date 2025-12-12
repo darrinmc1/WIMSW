@@ -25,39 +25,53 @@ export interface User {
   lastLogin?: string;
 }
 
+// Simple in-memory cache
+let userCache: Map<string, User> | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 30 * 1000; // 30 seconds cache TTL (short enough for updates, long enough for bursts)
+
 /**
- * Get user by email from Google Sheets
+ * Get user by email from Google Sheets (with caching)
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'Users!A:H', // Columns: ID, Email, Password, Name, Plan, CreatedAt, LastLogin, Role
-    });
+    const now = Date.now();
 
-    const rows = response.data.values;
-    if (!rows || rows.length <= 1) return null; // No data or only headers
+    // Refresh cache if null or expired
+    if (!userCache || (now - cacheTimestamp > CACHE_TTL)) {
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Users!A:H',
+      });
 
-    // Skip header row and find user
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (row[1]?.toLowerCase() === email.toLowerCase()) {
-        const plan = row[4] as UserPlan;
-        const role = row[7] as UserRole;
-        return {
-          id: row[0],
-          email: row[1],
-          password: row[2],
-          name: row[3],
-          plan: plan && ['free', 'premium', 'enterprise'].includes(plan) ? plan : 'free',
-          createdAt: row[5],
-          lastLogin: row[6],
-          role: role && ['user', 'admin'].includes(role) ? role : 'user',
-        };
+      const rows = response.data.values;
+      const newCache = new Map<string, User>();
+
+      if (rows && rows.length > 1) {
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (row[1]) { // Ensure email exists
+            const plan = row[4] as UserPlan;
+            const role = row[7] as UserRole;
+            const user: User = {
+              id: row[0],
+              email: row[1],
+              password: row[2],
+              name: row[3],
+              plan: plan && ['free', 'premium', 'enterprise'].includes(plan) ? plan : 'free',
+              createdAt: row[5],
+              lastLogin: row[6],
+              role: role && ['user', 'admin'].includes(role) ? role : 'user',
+            };
+            newCache.set(row[1].toLowerCase(), user);
+          }
+        }
       }
+      userCache = newCache;
+      cacheTimestamp = now;
     }
 
-    return null;
+    return userCache?.get(email.toLowerCase()) || null;
   } catch (error) {
     console.error('Error fetching user:', error);
     return null;
@@ -95,6 +109,9 @@ export async function createUser(email: string, hashedPassword: string, name?: s
         ]],
       },
     });
+
+    // Invalidate cache
+    userCache = null;
 
     return {
       id,
@@ -137,6 +154,8 @@ export async function updateLastLogin(email: string): Promise<void> {
             values: [[new Date().toISOString()]],
           },
         });
+        // Invalidate cache
+        userCache = null;
         break;
       }
     }
@@ -171,6 +190,8 @@ export async function updatePassword(email: string, newHash: string): Promise<bo
             values: [[newHash]],
           },
         });
+        // Invalidate cache
+        userCache = null;
         return true;
       }
     }

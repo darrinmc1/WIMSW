@@ -63,6 +63,12 @@ export const generateListingSchema = z.object({
   features: z.string().optional(),
 });
 
+// Validation schema for change-password API
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
 // Helper function to validate request body
 export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   try {
