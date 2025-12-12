@@ -146,6 +146,42 @@ export async function updateLastLogin(email: string): Promise<void> {
 }
 
 /**
+ * Update user password
+ */
+export async function updatePassword(email: string, newHash: string): Promise<boolean> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Users!A:G', // Need email column
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return false;
+
+    // Find user row
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[1]?.toLowerCase() === email.toLowerCase()) {
+        const rowNumber = i + 1;
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `Users!C${rowNumber}`, // Password column is C (index 2)
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[newHash]],
+          },
+        });
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error updating password:', error);
+    return false;
+  }
+}
+
+/**
  * Get all users from Google Sheets
  */
 export async function getAllUsers(): Promise<User[]> {

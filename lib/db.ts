@@ -102,6 +102,27 @@ export async function updateLastLogin(email: string): Promise<void> {
 }
 
 /**
+ * Update user password
+ */
+export async function updatePassword(email: string, newHash: string): Promise<boolean> {
+  if (USE_POSTGRES) {
+    try {
+      await prisma.user.update({
+        where: { email: email.toLowerCase() },
+        data: { password: newHash },
+      });
+      return true;
+    } catch (error) {
+      console.error('Error updating password in Postgres:', error);
+      return false;
+    }
+  }
+
+  // Fallback to Google Sheets
+  return await sheetsDb.updatePassword(email, newHash);
+}
+
+/**
  * Get all users (admin function)
  */
 export async function getAllUsers(): Promise<User[]> {

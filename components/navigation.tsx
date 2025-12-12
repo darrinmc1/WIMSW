@@ -65,9 +65,11 @@ export function Navigation() {
                 <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                   Logged In
                 </span>
-                <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                  My Profile
-                </Button>
+                <Link href="/dashboard">
+                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                    My Profile
+                  </Button>
+                </Link>
               </div>
             ) : (
               <>
