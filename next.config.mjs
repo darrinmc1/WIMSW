@@ -1,4 +1,9 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import withBundleAnalyzer from '@next/bundle-analyzer';
+
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -9,6 +14,32 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+  },
+  // Performance optimizations
+  compiler: {
+    // Remove console.logs in production
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  // Experimental features for better performance
+  experimental: {
+    // Optimize package imports for commonly used libraries
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  // Bundle analyzer (run with ANALYZE=true npm run build)
+  webpack: (config, { isServer }) => {
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: isServer ? '../analyze/server.html' : './analyze/client.html',
+          openAnalyzer: false,
+        })
+      );
+    }
+    return config;
   },
 }
 
@@ -46,4 +77,4 @@ const sentryOptions = {
   },
 };
 
-export default withSentryConfig(nextConfig, sentryOptions);
+export default bundleAnalyzer(withSentryConfig(nextConfig, sentryOptions));

@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Check, Shield, Zap, RefreshCw, Lock, DollarSign, Users, Award, ShoppingCart, Loader2 } from "lucide-react"
 import { TrialBanner } from "@/components/trial-banner"
-import { ContactSalesModal } from "@/components/contact-sales-modal"
+import dynamic from "next/dynamic"
+
+// Lazy load modal - only loads when user clicks "Contact Sales"
+const ContactSalesModal = dynamic(() => import("@/components/contact-sales-modal").then(mod => ({ default: mod.ContactSalesModal })), {
+  loading: () => null,
+  ssr: false
+})
 
 export function Pricing() {
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null)

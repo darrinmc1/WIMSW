@@ -233,7 +233,7 @@ export function InteractiveDemo() {
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left Column: Upload */}
-          <Card className="p-6 bg-card border-border h-full flex flex-col">
+          <Card className="p-6 bg-card border-border flex flex-col">
             <h3 className="text-2xl font-semibold text-foreground mb-6">1. Upload Photos</h3>
 
             <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20 mb-6">
@@ -241,11 +241,11 @@ export function InteractiveDemo() {
               Clear lighting and brand tags help our AI identify precise models to maximize your profit.
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 content-start">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 flex-1 content-start">
               {photos.map((photo) => (
                 <div key={photo.category} className="space-y-2">
                   <div className="text-sm font-medium text-foreground">{photo.label}</div>
-                  <div className="relative aspect-square bg-muted/50 rounded-lg border-2 border-dashed border-border hover:border-primary transition-all duration-300 group overflow-hidden">
+                  <div className="relative aspect-video bg-muted/50 rounded-lg border-2 border-dashed border-border hover:border-primary transition-all duration-300 group overflow-hidden">
                     {photo.image ? (
                       <>
                         <img
@@ -305,7 +305,7 @@ export function InteractiveDemo() {
           {/* Right Column: Results */}
           <div className="space-y-6">
             {!isAnalyzed ? (
-              <Card className="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-8 bg-card/50 border-border/50 border-dashed">
+              <Card className="flex flex-col items-center justify-center text-center p-8 bg-card/50 border-border/50 border-dashed">
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
                   <TrendingUp className="text-muted-foreground w-10 h-10" />
                 </div>
