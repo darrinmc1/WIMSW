@@ -9,7 +9,7 @@ export default async function DebugPage() {
         <div className="p-8 max-w-2xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">Debug Info</h1>
 
-            <div className="p-4 border rounded bg-gray-50">
+            <div className="p-4 border rounded bg-gray-50 text-black">
                 <h2 className="font-bold mb-2">Database Connection</h2>
                 <p>Mode: <strong>{USE_POSTGRES ? 'PostgreSQL' : 'Google Sheets'}</strong></p>
                 <p className="text-sm text-gray-500 mt-1">
@@ -17,7 +17,7 @@ export default async function DebugPage() {
                 </p>
             </div>
 
-            <div className="p-4 border rounded bg-gray-50">
+            <div className="p-4 border rounded bg-gray-50 text-black">
                 <h2 className="font-bold mb-2">Current Session</h2>
                 <pre className="bg-gray-900 text-white p-4 rounded overflow-auto">
                     {JSON.stringify(session, null, 2)}
