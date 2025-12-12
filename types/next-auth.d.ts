@@ -1,5 +1,6 @@
 import "next-auth";
 import "next-auth/jwt";
+import type { UserPlan, UserRole } from "@prisma/client";
 
 declare module "next-auth" {
   /**
@@ -9,8 +10,8 @@ declare module "next-auth" {
     id: string;
     email: string;
     name?: string | null;
-    plan: "free" | "premium" | "enterprise";
-    role: "user" | "admin";
+    plan: UserPlan;
+    role: UserRole;
   }
 
   /**
@@ -21,8 +22,8 @@ declare module "next-auth" {
       id: string;
       email: string;
       name?: string | null;
-      plan: "free" | "premium" | "enterprise";
-      role: "user" | "admin";
+      plan: UserPlan;
+      role: UserRole;
     };
   }
 }
@@ -34,7 +35,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     email: string;
-    plan: "free" | "premium" | "enterprise";
-    role: "user" | "admin";
+    plan: UserPlan;
+    role: UserRole;
   }
 }

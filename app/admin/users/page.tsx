@@ -1,4 +1,4 @@
-import { getAllUsers } from "@/lib/google-sheets-db";
+import { getAllUsers } from "@/lib/db";
 import {
     Table,
     TableBody,
@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { UserPlan, UserRole } from "@prisma/client";
 
 export default async function UsersPage() {
     const users = await getAllUsers();
@@ -37,12 +38,12 @@ export default async function UsersPage() {
                                 <TableCell className="font-medium">{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.plan === "premium" || user.plan === "enterprise" ? "default" : "secondary"}>
+                                    <Badge variant={user.plan === UserPlan.PREMIUM || user.plan === UserPlan.ENTERPRISE ? "default" : "secondary"}>
                                         {user.plan}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={user.role === "admin" ? "destructive" : "outline"}>
+                                    <Badge variant={user.role === UserRole.ADMIN ? "destructive" : "outline"}>
                                         {user.role}
                                     </Badge>
                                 </TableCell>

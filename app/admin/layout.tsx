@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { LayoutDashboard, Users, Settings, LogOut, FileText } from "lucide-react"
+import { UserRole } from "@prisma/client"
 
 export default async function AdminLayout({
     children,
@@ -12,7 +13,7 @@ export default async function AdminLayout({
     const session = await getServerSession(authOptions)
 
     // Protect Admin Route
-    if (!session || (session.user as any).role !== "admin") {
+    if (!session || session.user.role !== UserRole.ADMIN) {
         redirect("/login?callbackUrl=/admin")
     }
 

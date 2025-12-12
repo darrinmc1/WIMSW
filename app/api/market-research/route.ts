@@ -2,6 +2,7 @@ import { generateWithFallback } from "@/lib/gemini";
 import { performMarketResearch } from "@/lib/perplexity";
 import { marketResearchSchema, validateRequest } from "@/lib/validations";
 import { rateLimit, getClientIdentifier, marketResearchLimiter } from "@/lib/rate-limit";
+import { generateCacheKey, withCache, CACHE_TTL } from "@/lib/cache";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
             'X-RateLimit-Limit': String(rateLimitResult.limit),
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
             'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+            'X-Cache': 'BYPASS',
           }
         }
       );
@@ -31,20 +33,36 @@ export async function POST(req: Request) {
     if (!validation.success) {
       return NextResponse.json(
         { success: false, error: validation.error },
-        { status: 400 }
+        { status: 400, headers: { 'X-Cache': 'BYPASS' } }
       );
     }
 
-    const { description, isLocalOnly, sizeInput, ageInput, ...itemDetails } = validation.data;
+    const { description, isLocalOnly, sizeInput, ageInput, bustCache, ...itemDetails } = validation.data;
 
-    // Step 1: Use Perplexity for real market research
-    const marketResearch = await performMarketResearch({
+    // Generate cache key based on item details
+    const cacheKey = generateCacheKey('market-research', {
       name: itemDetails.name,
       brand: itemDetails.brand,
-      model: "",
-      condition: itemDetails.condition || sizeInput,
       category: itemDetails.category,
+      condition: itemDetails.condition,
+      isLocalOnly,
     });
+
+    // Check if user wants fresh data
+    const shouldBustCache = bustCache === true;
+
+    // Wrap the expensive API calls in cache
+    const data = await withCache(
+      cacheKey,
+      async () => {
+        // Step 1: Use Perplexity for real market research
+        const marketResearch = await performMarketResearch({
+          name: itemDetails.name,
+          brand: itemDetails.brand,
+          model: "",
+          condition: itemDetails.condition || sizeInput,
+          category: itemDetails.category,
+        });
 
     // Step 2: Use Gemini to generate similar items based on market research
     const prompt = `
@@ -101,22 +119,39 @@ export async function POST(req: Request) {
       Generate at least 6 similar items. Use realistic prices based on market research above.
     `;
 
-    const text = await generateWithFallback({ prompt, responseMimeType: "application/json" });
-    const data = JSON.parse(text);
+        const text = await generateWithFallback({ prompt, responseMimeType: "application/json" });
+        const result = JSON.parse(text);
 
-    // Add market research sources to response
-    data.marketResearch = {
-      summary: marketResearch.summary,
-      sources: marketResearch.sources,
-    };
+        // Add market research sources to response
+        result.marketResearch = {
+          summary: marketResearch.summary,
+          sources: marketResearch.sources,
+        };
 
-    return NextResponse.json({ success: true, data });
+        return result;
+      },
+      CACHE_TTL.MARKET_RESEARCH,
+      shouldBustCache
+    );
+
+    // Determine if response came from cache
+    const cacheStatus = shouldBustCache ? 'MISS' : 'HIT';
+
+    return NextResponse.json(
+      { success: true, data },
+      {
+        headers: {
+          'X-Cache': cacheStatus,
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
 
   } catch (error: any) {
     console.error("Market Research Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to research market" },
-      { status: 500 }
+      { status: 500, headers: { 'X-Cache': 'BYPASS' } }
     );
   }
 }

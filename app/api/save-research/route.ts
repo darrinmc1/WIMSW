@@ -1,59 +1,91 @@
-
-import { NextResponse } from 'next/server'
-import { google } from 'googleapis'
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { saveResearchHistory } from '@/lib/db';
+import { rateLimit, getClientIdentifier, generalLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
     try {
-        const researchData = await request.json()
+        // Authentication required
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        // Rate limiting: 30 requests per minute
+        const identifier = getClientIdentifier(request);
+        const rateLimitResult = await rateLimit(identifier, generalLimiter);
+
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { success: false, error: 'Too many requests. Please try again later.' },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': String(rateLimitResult.limit),
+                        'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+                        'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+                    }
+                }
+            );
+        }
+
+        const researchData = await request.json();
 
         // Destructure expected fields
         const {
-            date,
             itemName,
             brand,
             category,
+            condition,
+            size,
             estimatedPrice,
             averagePrice,
             lowestPrice,
             highestPrice,
-            image // Optional, maybe a link if we uploaded it, but skipping for sheets for now unless short URL
-        } = researchData
+            results,
+            isLocalOnly = false,
+        } = researchData;
 
-        // Google Sheets setup
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        // Validate required fields
+        if (!itemName || !brand || !category || !condition) {
+            return NextResponse.json(
+                { success: false, error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // Save to database using abstraction layer
+        await saveResearchHistory(
+            session.user.id,
+            {
+                name: itemName,
+                brand,
+                category,
+                condition,
+                size,
+                estimatedPrice: averagePrice || estimatedPrice || 0,
             },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        })
+            {
+                estimatedPrice,
+                averagePrice,
+                lowestPrice,
+                highestPrice,
+                ...results,
+            },
+            isLocalOnly
+        );
 
-        const sheets = google.sheets({ version: 'v4', auth })
-        const spreadsheetId = process.env.GOOGLE_SHEET_ID
+        return NextResponse.json({ success: true });
 
-        // Append row to sheet "Research"
-        await sheets.spreadsheets.values.append({
-            spreadsheetId,
-            range: 'Research!A:H',
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [[
-                    date || new Date().toISOString(),
-                    itemName || 'Unknown',
-                    brand || 'N/A',
-                    category || 'N/A',
-                    estimatedPrice || 0,
-                    averagePrice || 0,
-                    `${lowestPrice || 0} - ${highestPrice || 0}`, // Price Range
-                    'Saved' // Status
-                ]]
-            }
-        })
-
-        return NextResponse.json({ success: true })
-
-    } catch (error) {
-        console.error('Save Research error:', error)
-        return NextResponse.json({ success: false }, { status: 500 })
+    } catch (error: any) {
+        console.error('Save Research error:', error);
+        return NextResponse.json(
+            { success: false, error: error.message || 'Failed to save research' },
+            { status: 500 }
+        );
     }
 }

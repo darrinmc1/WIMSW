@@ -1,41 +1,67 @@
-import { NextResponse } from 'next/server'
-import { google } from 'googleapis'
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { validateRequest } from '@/lib/validations';
+import { rateLimit, getClientIdentifier, generalLimiter } from '@/lib/rate-limit';
+import { prisma } from '@/lib/prisma';
+import { USE_POSTGRES } from '@/lib/db';
+
+const signupSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    source: z.string().optional(),
+});
 
 export async function POST(request: Request) {
     try {
-        const { email, source } = await request.json()
+        // Rate limiting: 30 requests per minute (prevent spam)
+        const identifier = getClientIdentifier(request);
+        const rateLimitResult = await rateLimit(identifier, generalLimiter);
 
-        // Google Sheets setup
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-            },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        })
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { success: false, error: 'Too many requests. Please try again later.' },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': String(rateLimitResult.limit),
+                        'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+                        'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+                    }
+                }
+            );
+        }
 
-        const sheets = google.sheets({ version: 'v4', auth })
-        const spreadsheetId = process.env.GOOGLE_SHEET_ID
+        const body = await request.json();
 
-        // Append row to sheet
-        await sheets.spreadsheets.values.append({
-            spreadsheetId,
-            range: 'Signups!A:D', // Sheet name: "Signups"
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [[
-                    new Date().toISOString(),
+        // Validate request
+        const validation = validateRequest(signupSchema, body);
+        if (!validation.success) {
+            return NextResponse.json(
+                { success: false, error: validation.error },
+                { status: 400 }
+            );
+        }
+
+        const { email, source } = validation.data;
+
+        // Save to database if PostgreSQL is configured
+        if (USE_POSTGRES) {
+            await prisma.interestSignup.create({
+                data: {
                     email,
-                    source,
-                    'trial' // Default tier
-                ]]
-            }
-        })
+                    source: source || 'website',
+                },
+            });
+        } else {
+            // Fallback: Just log (in production, send to CRM)
+            console.log('Interest Signup:', { email, source });
+        }
 
-        return NextResponse.json({ success: true })
-
-    } catch (error) {
-        console.error('Signup error:', error)
-        return NextResponse.json({ success: false }, { status: 500 })
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('Signup Interest error:', error);
+        return NextResponse.json(
+            { success: false, error: error.message || 'Failed to process signup' },
+            { status: 500 }
+        );
     }
 }

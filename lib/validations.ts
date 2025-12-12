@@ -43,6 +43,7 @@ export const marketResearchSchema = z.object({
   sizeInput: z.string().optional(),
   ageInput: z.string().optional(),
   isLocalOnly: z.boolean().optional().default(false),
+  bustCache: z.boolean().optional().default(false), // Force fresh data
 });
 
 // Validation schema for contact-sales API

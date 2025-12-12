@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
-import { ArrowLeft, Mail, Lock, LogIn } from 'lucide-react'
+import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ function LoginContent() {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -91,13 +92,20 @@ function LoginContent() {
                         <div className="relative text-gray-900">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
-                                className="pl-10 bg-white !text-gray-900"
+                                className="pl-10 pr-10 bg-white !text-gray-900"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                     </div>
 

@@ -1,10 +1,10 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -13,8 +13,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, Loader2, Calendar, Search } from "lucide-react"
+import { ArrowLeft, Calendar, Search, AlertCircle, RefreshCw } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 interface ResearchRecord {
     id: number
@@ -28,9 +30,76 @@ interface ResearchRecord {
     status: string
 }
 
+function TableSkeleton() {
+    return (
+        <div className="hidden md:block overflow-x-auto">
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                        <TableHead className="w-[120px]">Date</TableHead>
+                        <TableHead>Item Name</TableHead>
+                        <TableHead>Brand</TableHead>
+                        <TableHead>Est. Value</TableHead>
+                        <TableHead>Market Avg</TableHead>
+                        <TableHead>Range</TableHead>
+                        <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {[...Array(5)].map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-6 w-16 ml-auto" /></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    )
+}
+
+function MobileCardsSkeleton() {
+    return (
+        <div className="md:hidden space-y-4 p-4">
+            {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                            <Skeleton className="h-3 w-16 mb-2" />
+                            <Skeleton className="h-5 w-full" />
+                        </div>
+                        <Skeleton className="h-5 w-12" />
+                    </div>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <Skeleton className="h-3 w-16 mb-1" />
+                            <Skeleton className="h-5 w-12" />
+                        </div>
+                        <div>
+                            <Skeleton className="h-3 w-16 mb-1" />
+                            <Skeleton className="h-5 w-12" />
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 export default function HistoryPage() {
+    const router = useRouter()
     const [history, setHistory] = useState<ResearchRecord[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         fetchHistory()
@@ -38,13 +107,32 @@ export default function HistoryPage() {
 
     const fetchHistory = async () => {
         try {
+            setLoading(true)
+            setError(null)
+
             const response = await fetch('/api/get-research-history')
-            const result = await response.json()
-            if (result.success) {
-                setHistory(result.data)
+
+            if (response.status === 401) {
+                toast.error('Please log in to view your research history')
+                router.push('/login?callbackUrl=/history')
+                return
             }
-        } catch (error) {
+
+            if (!response.ok) {
+                throw new Error('Failed to load history')
+            }
+
+            const result = await response.json()
+
+            if (result.success) {
+                setHistory(result.data || [])
+            } else {
+                throw new Error(result.error || 'Failed to load history')
+            }
+        } catch (error: any) {
             console.error("Failed to load history:", error)
+            setError(error.message || 'Something went wrong. Please try again.')
+            toast.error(error.message || 'Failed to load research history')
         } finally {
             setLoading(false)
         }
@@ -52,7 +140,11 @@ export default function HistoryPage() {
 
     const formatDate = (dateString: string) => {
         try {
-            return new Date(dateString).toLocaleDateString()
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })
         } catch (e) {
             return dateString
         }
@@ -86,14 +178,35 @@ export default function HistoryPage() {
                 {/* Content */}
                 <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden">
                     {loading ? (
-                        <div className="flex justify-center items-center py-20">
-                            <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+                        <>
+                            <TableSkeleton />
+                            <MobileCardsSkeleton />
+                        </>
+                    ) : error ? (
+                        <div className="text-center py-20 px-4">
+                            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to Load History</h3>
+                            <p className="text-gray-500 mb-6">{error}</p>
+                            <Button
+                                onClick={fetchHistory}
+                                variant="outline"
+                                className="gap-2"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                                Try Again
+                            </Button>
                         </div>
                     ) : history.length === 0 ? (
-                        <div className="text-center py-20">
+                        <div className="text-center py-20 px-4">
                             <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                            <h3 className="text-lg font-medium text-gray-900">No Research History</h3>
-                            <p className="text-gray-500">Items you verify will appear here.</p>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Research History</h3>
+                            <p className="text-gray-500 mb-6">Start researching items to see your history here</p>
+                            <Link href="/market-research">
+                                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Start Your First Research
+                                </Button>
+                            </Link>
                         </div>
                     ) : (
                         <>
