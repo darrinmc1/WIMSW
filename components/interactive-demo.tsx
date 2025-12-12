@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { BrandName } from "@/components/brand-name"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -29,80 +30,98 @@ export function InteractiveDemo() {
     { category: "damage", label: "Damage/Wear", description: "Flaws if any (optional)", image: null },
   ])
 
-  // Initial mock data as default
-  const defaultAnalysis = {
-    brand: "Nike",
-    item: "Air Max 90 Sneakers",
-    condition: "Good - Minor wear visible on soles",
-    suggestedPrice: "$85-$110",
+  // Template for structure (empty state)
+  const templateAnalysis = {
+    brand: "",
+    item: "",
+    condition: "",
+    suggestedPrice: "",
     recommendation: {
-      platform: "Depop",
-      reason: "Trending high with Gen Z buyers right now"
+      platform: "",
+      reason: ""
     },
     platforms: [
       {
         name: "eBay",
-        listing: "Nike Air Max 90 Sneakers Size 10 - Excellent Condition - Authentic - Fast Ship",
-        price: "$95.00",
-        fees: "$12.55",
-        net: "$82.45",
+        listing: "[Brand] [Item] - Excellent Condition - Authentic - Fast Ship",
+        price: "",
+        fees: "",
+        net: "",
         speed: "Fast (1-3 days)",
         demand: "High",
-        url: "https://www.ebay.com/sch/i.html?_nkw=Nike+Air+Max+90+Sneakers",
+        url: "",
         instructions: "List as 'Buy It Now'. Use the 7-day duration if auctioning, but fixed price is recommended for this item.",
         settings: [
-          "Category: Clothing, Shoes & Accessories > Men > Men's Shoes > Athletic Shoes",
+          "Category: Clothing, Shoes & Accessories",
           "Condition: Pre-owned",
-          "Accept Offers: Yes (Auto-decline < $80)",
-          "Shipping: USPS Ground Advantage (Buyer pays)"
+          "Accept Offers: Yes",
+          "Shipping: Buyer pays"
         ]
       },
       {
         name: "Poshmark",
-        listing: "Nike Air Max 90 Size 10 💙 #nike #airmax #sneakers #mensshoes #athletic",
-        price: "$105.00",
-        fees: "$21.00",
-        net: "$84.00",
+        listing: "[Brand] [Item] 💙 #fashion #style #authentic",
+        price: "",
+        fees: "",
+        net: "",
         speed: "Medium (3-7 days)",
         demand: "Medium",
-        url: "https://poshmark.com/search?query=Nike%20Air%20Max%2090%20Sneakers",
+        url: "",
         instructions: "Share to evening parties for better visibility. Send offers to likers 1 hour after they like.",
         settings: [
-          "Category: Men > Shoes > Sneakers",
-          "Size: 10 Standard",
-          "Original Price: $130",
-          "Discount Shipping: No (unless sending offer)"
+          "Category: Clothing",
+          "Size: Standard",
+          "Original Price: [Price]",
+          "Discount Shipping: No"
         ]
       },
       {
         name: "Depop",
-        listing: "vintage nike air max 90 sz 10 🔥 rare colorway, great condition, ready to ship 📦",
-        price: "$110.00",
-        fees: "$11.00",
-        net: "$99.00",
+        listing: "vintage [brand] [item] 🔥 great condition, ready to ship 📦",
+        price: "",
+        fees: "",
+        net: "",
         speed: "Fast (1-5 days)",
         demand: "Very High",
-        url: "https://www.depop.com/search/?q=Nike%20Air%20Max%2090%20Sneakers",
+        url: "",
         instructions: "Refresh listing daily. Use all 5 hashtags. Message buyers who like the item with a 10% discount.",
         settings: [
-          "Category: Menswear > Footwear > Sneakers",
-          "Style Tags: Streetwear, Sportswear, 90s",
-          "Shipping: Ship with Depop (Large package)",
+          "Category: Menswear/Womenswear",
+          "Style Tags: Streetwear, Vintage",
+          "Shipping: Ship with Depop",
           "International Shipping: No"
         ]
       },
     ],
   }
 
-  const [analysis, setAnalysis] = useState(defaultAnalysis)
+  const [analysis, setAnalysis] = useState(templateAnalysis)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validate file size (10MB limit)
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`File too large. Maximum size is 10MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload a valid image file (JPG, PNG, WEBP, etc.)');
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       const reader = new FileReader()
       reader.onloadend = () => {
         setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: reader.result as string } : photo)))
+      }
+      reader.onerror = () => {
+        toast.error('Failed to read image file. Please try again.');
       }
       reader.readAsDataURL(file)
     }
@@ -125,6 +144,15 @@ export function InteractiveDemo() {
         body: JSON.stringify({ image: frontPhoto }),
       })
 
+      // Handle non-200 responses specifically
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("System busy")
+        }
+        const data = await response.json()
+        throw new Error(data.error || "Analysis failed")
+      }
+
       const data = await response.json()
 
       if (data.success && data.data) {
@@ -145,7 +173,10 @@ export function InteractiveDemo() {
             if (p.name === "Depop") realUrl = `https://www.depop.com/search/?q=${searchTerm}`
 
             // Update listing title dynamically
-            let newListing = p.listing.replace(/Nike Air Max 90/gi, name).replace(/Nike/gi, brand)
+            let newListing = p.listing
+              .replace(/\[Brand\]/gi, brand)
+              .replace(/\[Item\]/gi, name)
+              .replace(/\[Price\]/gi, `$${estimated_price}`)
 
             return {
               ...p,
@@ -156,14 +187,19 @@ export function InteractiveDemo() {
             }
           })
         }))
+        setIsAnalyzed(true)
+        setExpandedPlatform("Depop")
+        toast.success("Item analyzed successfully!")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Demo analysis failed", error)
-      // Fallback to default/mock is already handled by initial state
+      if (error.message.includes("System busy")) {
+        toast.error("High demand! Our AI agents are busy. Please wait a moment and try again.")
+      } else {
+        toast.error("Something went wrong with the analysis. Please try again.")
+      }
     } finally {
       setIsAnalyzing(false)
-      setIsAnalyzed(true)
-      setExpandedPlatform("Depop")
     }
   }
 
@@ -205,7 +241,7 @@ export function InteractiveDemo() {
               Clear lighting and brand tags help our AI identify precise models to maximize your profit.
             </div>
 
-            <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 content-start">
               {photos.map((photo) => (
                 <div key={photo.category} className="space-y-2">
                   <div className="text-sm font-medium text-foreground">{photo.label}</div>
@@ -247,7 +283,7 @@ export function InteractiveDemo() {
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Optional Description</label>
                 <Textarea
-                  placeholder="Add a description or AI will work it out"
+                  placeholder="Add details like Size, Brand, Condition, or Defects to help AI give a better estimate..."
                   value={userDescription}
                   onChange={(e) => setUserDescription(e.target.value)}
                   className="bg-card/50 resize-none min-h-[80px]"
@@ -269,7 +305,7 @@ export function InteractiveDemo() {
           {/* Right Column: Results */}
           <div className="space-y-6">
             {!isAnalyzed ? (
-              <Card className="h-full min-h-[500px] flex flex-col items-center justify-center text-center p-8 bg-card/50 border-border/50 border-dashed">
+              <Card className="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-8 bg-card/50 border-border/50 border-dashed">
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
                   <TrendingUp className="text-muted-foreground w-10 h-10" />
                 </div>

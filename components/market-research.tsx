@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -66,6 +67,9 @@ interface AnalyzedItem {
 
 export function MarketResearch() {
     const [loading, setLoading] = useState(false)
+    const [isLocalOnly, setIsLocalOnly] = useState(false)
+    const [sizeInput, setSizeInput] = useState("")
+    const [ageInput, setAgeInput] = useState("")
     const [analyzingImage, setAnalyzingImage] = useState(false)
     const [searchResults, setSearchResults] = useState<ResearchData | null>(null)
     const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
@@ -90,11 +94,11 @@ export function MarketResearch() {
 
         // File Validation
         if (!file.type.startsWith('image/')) {
-            setError("Please upload a valid image file (JPG, PNG)")
+            toast.error("Please upload a valid image file (JPG, PNG)")
             return
         }
         if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            setError("Image size too large. Please upload an image under 10MB.")
+            toast.error("Image size too large. Please upload an image under 10MB.")
             return
         }
 
@@ -127,15 +131,31 @@ export function MarketResearch() {
                 body: JSON.stringify({ image: base64Image }),
             })
 
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error("We're experiencing high traffic. Please try again in a minute.")
+                }
+                const text = await response.text();
+                try {
+                    const data = JSON.parse(text);
+                    throw new Error(data.error || `Server error: ${response.status} - ${text.substring(0, 100)}`);
+                } catch (e) {
+                    // If NOT valid JSON, throw the raw text or generic error
+                    throw new Error(`Server Error (${response.status}): ${text || "Unknown error occurred"}`);
+                }
+            }
+
             const data = await response.json()
-            if (!response.ok) throw new Error(data.error || "Failed to analyze image")
 
             if (data.success) {
                 setItemDetails(data.data)
+                toast.success("Item identified successfully!")
             }
         } catch (err: any) {
             console.error("Analysis Error:", err)
-            setError(err.message || "Failed to identify item from image.")
+            const errorMsg = err.message || "Failed to identify item from image."
+            setError(errorMsg)
+            toast.error(errorMsg)
         } finally {
             setAnalyzingImage(false)
         }
@@ -153,7 +173,10 @@ export function MarketResearch() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...itemDetails,
-                    description // Pass the user description
+                    description,
+                    sizeInput,
+                    ageInput,
+                    isLocalOnly
                 }),
             })
 
@@ -162,6 +185,7 @@ export function MarketResearch() {
 
             if (data.success) {
                 setSearchResults(data.data)
+                toast.success("Market research completed!")
                 // Auto-scroll to results
                 setTimeout(() => {
                     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -169,7 +193,9 @@ export function MarketResearch() {
             }
         } catch (err: any) {
             console.error("Research Error:", err)
-            setError(err.message || "Failed to research similar items.")
+            const errorMsg = err.message || "Failed to research similar items."
+            setError(errorMsg)
+            toast.error(errorMsg)
         } finally {
             setLoading(false)
         }
@@ -276,15 +302,40 @@ export function MarketResearch() {
                             {renderUploadCard('Damage/Wear', 'damage')}
                         </div>
 
-                        {/* Description Field */}
-                        <Card className="p-4 border-0 shadow-lg bg-white">
-                            <label className="text-sm font-medium text-gray-700 mb-2 block">Item Description (Optional)</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Add any extra details... (e.g. 'Small tear on sleeve', 'Vintage 1990s')"
-                                className="w-full min-h-[100px] p-3 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm resize-none"
-                            />
+                        {/* Description & Details Fields */}
+                        <Card className="p-4 border-0 shadow-lg bg-white space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-2 block">Size (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={sizeInput}
+                                        onChange={(e) => setSizeInput(e.target.value)}
+                                        placeholder="e.g. Medium, 10, 32x32"
+                                        className="w-full p-2.5 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-2 block">Approx Age (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={ageInput}
+                                        onChange={(e) => setAgeInput(e.target.value)}
+                                        placeholder="e.g. 2020, 90s Vintage"
+                                        className="w-full p-2.5 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">Extra Details (Defects, etc.)</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Add any extra details... (e.g. '100% Silk', 'Model #123', 'Missing button', 'Original box included')"
+                                    className="w-full min-h-[100px] p-3 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm resize-none"
+                                />
+                            </div>
                         </Card>
                     </div>
 
@@ -313,7 +364,19 @@ export function MarketResearch() {
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-gray-100">
+                                <div className="pt-4 border-t border-gray-100 space-y-4">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="localOnly"
+                                            checked={isLocalOnly}
+                                            onChange={(e) => setIsLocalOnly(e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                        />
+                                        <label htmlFor="localOnly" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                                            Search Local Only (Large items, furniture, etc.)
+                                        </label>
+                                    </div>
                                     <Button
                                         onClick={handleResearch}
                                         disabled={loading}
@@ -457,19 +520,40 @@ export function MarketResearch() {
                                 {filteredItems.map((item, index) => {
                                     const priceDiff = item.price - (itemDetails?.estimated_price || 0)
 
-                                    return (
-                                        <Card key={index} className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white group">
-                                            <div className="p-5 space-y-4">
-                                                <div className="flex justify-between items-start">
-                                                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${getPlatformBadgeColor(item.platform)}`}>
-                                                        {item.platform_name}
-                                                    </span>
-                                                    <span className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${item.status === 'sold' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                        {item.status === 'sold' ? <CheckCircleIcon /> : <ClockIcon />}
-                                                        {item.status === 'sold' ? 'Sold' : 'Active'}
-                                                    </span>
-                                                </div>
+                                    // Helper to generate correct search URLs
+                                    const getPlatformLink = (platform: string, term: string) => {
+                                        const query = encodeURIComponent(term || item.title);
+                                        const p = platform.toLowerCase();
 
+                                        if (p.includes('ebay')) return `https://www.ebay.com/sch/i.html?_nkw=${query}&_sacat=0&LH_Sold=1&LH_Complete=1`;
+                                        if (p.includes('poshmark')) return `https://poshmark.com/search?query=${query}`;
+                                        if (p.includes('mercari')) return `https://www.mercari.com/search/?keyword=${query}&status=sold_out`;
+                                        if (p.includes('depop')) return `https://www.depop.com/search/?q=${query}`;
+                                        if (p.includes('facebook') || p.includes('fb')) return `https://www.facebook.com/marketplace/search/?query=${query}`;
+                                        if (p.includes('offerup')) return `https://offerup.com/search?q=${query}`;
+                                        if (p.includes('craigslist')) return `https://www.craigslist.org/search/sss?query=${query}`;
+                                        if (p.includes('gumtree')) return `https://www.gumtree.com/search?search_category=all&q=${query}`;
+
+                                        return `https://www.google.com/search?q=${query}+site:${platform}.com`;
+                                    };
+
+                                    return (
+                                        <Card key={index} className="p-4 border-gray-100 hover:border-indigo-100 transition-colors">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none">
+                                                    {item.platform_name.toUpperCase()} {item.status === 'sold' && '(SOLD LISTING)'}
+                                                </Badge>
+                                                <a
+                                                    href={getPlatformLink(item.platform_name, (item as any).search_term || item.title)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-gray-400 hover:text-indigo-600"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </a>
+                                            </div>
+
+                                            <div className="space-y-4">
                                                 <div>
                                                     <h3 className="font-bold text-gray-900 line-clamp-2 leading-tight h-10 mb-1" title={item.title}>
                                                         {item.title}
@@ -503,8 +587,8 @@ export function MarketResearch() {
                                                     variant="outline"
                                                     className="w-full gap-2 hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
                                                 >
-                                                    <a href={item.url} target="_blank" rel="noopener noreferrer">
-                                                        View on {item.platform_name}
+                                                    <a href={getPlatformLink(item.platform_name, (item as any).search_term || item.title)} target="_blank" rel="noopener noreferrer">
+                                                        Find Similar on {item.platform_name}
                                                         <ExternalLink className="h-4 w-4" />
                                                     </a>
                                                 </Button>

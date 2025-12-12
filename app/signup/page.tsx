@@ -1,29 +1,69 @@
 "use client"
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { BrandName } from '@/components/brand-name'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
-import { ArrowLeft, Mail, Lock } from 'lucide-react'
+import { ArrowLeft, Mail, Lock, User } from 'lucide-react'
+import { signIn } from 'next-auth/react'
+import { toast } from 'sonner'
 
 function SignupContent() {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const plan = searchParams.get('plan')
     const emailParam = searchParams.get('email')
 
+    const [name, setName] = useState('')
     const [email, setEmail] = useState(emailParam || '')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            toast.error('Passwords do not match')
+            return
+        }
+
+        // Validate password length
+        if (password.length < 8) {
+            toast.error('Password must be at least 8 characters')
+            return
+        }
+
         setIsLoading(true)
 
         try {
-            const response = await fetch('/api/signup-interest', {
+            // Register user
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: name || undefined,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!data.success) {
+                toast.error(data.error || 'Registration failed')
+                setIsLoading(false)
+                return
+            }
+
+            // Also save to signup interest sheet
+            await fetch('/api/signup-interest', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -31,23 +71,31 @@ function SignupContent() {
                 body: JSON.stringify({
                     email,
                     source: 'signup-page',
-                    plan: plan || 'trial'
+                    plan: plan || 'free'
                 }),
             })
 
-            const data = await response.json()
+            toast.success('Account created successfully!')
 
-            if (data.success) {
-                // Redirect to success page or show success message
-                // For now, let's redirect to the market research tool as a "trial"
-                window.location.href = '/market-research'
-            } else {
-                alert('Signup failed. Please try again.')
+            // Auto-login the user
+            const signInResult = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            })
+
+            if (signInResult?.error) {
+                toast.error('Account created but login failed. Please login manually.')
+                router.push('/login')
+                return
             }
+
+            // Redirect to market research
+            router.push('/market-research')
+            router.refresh()
         } catch (error) {
             console.error('Signup error:', error)
-            alert('An error occurred. Please try again.')
-        } finally {
+            toast.error('An error occurred. Please try again.')
             setIsLoading(false)
         }
     }
@@ -73,13 +121,27 @@ function SignupContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Name (Optional)</label>
+                        <div className="relative text-gray-900">
+                            <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                            <Input
+                                type="text"
+                                placeholder="Your name"
+                                className="pl-10 bg-white !text-gray-900"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Email Address</label>
-                        <div className="relative">
+                        <div className="relative text-gray-900">
                             <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
                                 type="email"
                                 placeholder="you@example.com"
-                                className="pl-10"
+                                className="pl-10 bg-white !text-gray-900"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -88,16 +150,33 @@ function SignupContent() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Password</label>
-                        <div className="relative">
+                        <label className="text-sm font-medium text-gray-700">Password (min 8 characters)</label>
+                        <div className="relative text-gray-900">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
                                 type="password"
                                 placeholder="••••••••"
-                                className="pl-10"
+                                className="pl-10 bg-white !text-gray-900"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                minLength={8}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                        <div className="relative text-gray-900">
+                            <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                            <Input
+                                type="password"
+                                placeholder="••••••••"
+                                className="pl-10 bg-white !text-gray-900"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                minLength={8}
                             />
                         </div>
                     </div>

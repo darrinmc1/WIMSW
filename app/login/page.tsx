@@ -6,8 +6,15 @@ import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
 import { ArrowLeft, Mail, Lock, LogIn } from 'lucide-react'
+import { signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 function LoginContent() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const callbackUrl = searchParams.get('callbackUrl') || '/market-research'
+
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -16,12 +23,27 @@ function LoginContent() {
         e.preventDefault()
         setIsLoading(true)
 
-        // Simulate login delay
-        setTimeout(() => {
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            })
+
+            if (result?.error) {
+                toast.error(result.error)
+                setIsLoading(false)
+                return
+            }
+
+            toast.success('Login successful!')
+            router.push(callbackUrl)
+            router.refresh()
+        } catch (error) {
+            console.error('Login error:', error)
+            toast.error('An unexpected error occurred')
             setIsLoading(false)
-            // Redirect to market research tool
-            window.location.href = '/market-research'
-        }, 1000)
+        }
     }
 
     return (
@@ -46,12 +68,12 @@ function LoginContent() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Email Address</label>
-                        <div className="relative">
+                        <div className="relative text-gray-900">
                             <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
                                 type="email"
                                 placeholder="you@example.com"
-                                className="pl-10"
+                                className="pl-10 bg-white !text-gray-900"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -66,12 +88,12 @@ function LoginContent() {
                                 Forgot password?
                             </Link>
                         </div>
-                        <div className="relative">
+                        <div className="relative text-gray-900">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
                                 type="password"
                                 placeholder="••••••••"
-                                className="pl-10"
+                                className="pl-10 bg-white !text-gray-900"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required

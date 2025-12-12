@@ -24,6 +24,7 @@ export function Navigation() {
   const navItems = [
     { label: "Features", href: "/#features" },
     { label: "Pricing", href: "/#pricing" },
+    { label: "Create Listing", href: "/create-listing" },
     { label: "How It Works", href: "/#how-it-works" },
     { label: "History", href: "/history" },
     { label: "FAQ", href: "/#faq" },

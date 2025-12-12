@@ -98,20 +98,7 @@ export function Hero() {
                 />
 
                 {/* Floating UI Elements Overlays */}
-                <div className="absolute top-6 right-6 glass-panel p-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <span className="text-green-400 text-xs font-bold">$45</span>
-                  </div>
-                  <div className="text-xs font-medium text-white/80">
-                    <div>Est. Profit</div>
-                    <div className="text-green-400 font-bold">+15% vs Avg</div>
-                  </div>
-                </div>
 
-                <div className="absolute bottom-6 left-6 glass-panel p-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-                  <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                  <span className="text-xs font-medium text-white/90">Analyzing Fabric...</span>
-                </div>
               </div>
             </div>
           </div>
