@@ -45,6 +45,14 @@ export async function POST(req: Request) {
         console.log("Analyze Item Request Received");
         console.log("API Key configured:", !!process.env.GEMINI_API_KEY);
 
+        if (!process.env.GEMINI_API_KEY) {
+            console.error("GEMINI_API_KEY is not configured");
+            return NextResponse.json(
+                { success: false, error: "AI service not configured. Please contact support." },
+                { status: 500 }
+            );
+        }
+
         const prompt = `
       Analyze this image of an item to be sold.
       Identify the following details and return them in pure JSON format:
@@ -74,19 +82,59 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, data });
     } catch (error: any) {
-        console.error("Analyze Item Error Object:", JSON.stringify(error, null, 2));
-        console.error("Analyze Item Error Message:", error.message);
+        // Log detailed error information for debugging
+        console.error("=== ANALYZE ITEM ERROR ===");
+        console.error("Error Type:", error.constructor.name);
+        console.error("Error Message:", error.message);
+        console.error("Error Status:", error.status);
+        console.error("Error Code:", error.code);
+        console.error("Full Error:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        console.error("Stack:", error.stack);
+        console.error("========================");
 
-        // Check for rate limit error
-        if (error.status === 429 || error.message?.includes("429") || error.message?.includes("quota")) {
+        // Parse JSON errors from AI response
+        if (error.message?.includes("JSON") || error.message?.includes("parse")) {
             return NextResponse.json(
-                { success: false, error: "System busy. Please try again in a minute." },
+                { success: false, error: `AI returned invalid format. Try uploading a clearer photo. (Debug: ${error.message})` },
+                { status: 500 }
+            );
+        }
+
+        // Check for API key/permission errors
+        if (error.message?.includes("API key") || error.message?.includes("PERMISSION_DENIED") || error.message?.includes("API_KEY_INVALID")) {
+            return NextResponse.json(
+                { success: false, error: `Gemini API authentication error. Check if your API key is valid and has billing enabled. (Debug: ${error.message})` },
+                { status: 500 }
+            );
+        }
+
+        // Check for rate limit/quota errors
+        if (error.status === 429 || error.message?.includes("429") || error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED")) {
+            return NextResponse.json(
+                { success: false, error: `Gemini API quota exceeded. Wait a minute or check your API billing at https://console.cloud.google.com/` },
                 { status: 429 }
             );
         }
 
+        // Check for network/connection errors
+        if (error.message?.includes("fetch") || error.message?.includes("network") || error.message?.includes("ECONNREFUSED") || error.message?.includes("ENOTFOUND")) {
+            return NextResponse.json(
+                { success: false, error: `Cannot reach Gemini API servers. Check your internet connection or Gemini service status. (Debug: ${error.message})` },
+                { status: 503 }
+            );
+        }
+
+        // Check for model errors
+        if (error.message?.includes("models") || error.message?.includes("overload")) {
+            return NextResponse.json(
+                { success: false, error: `All Gemini models are busy or unavailable. Try again in a few seconds. (Debug: ${error.message})` },
+                { status: 503 }
+            );
+        }
+
+        // Return the actual error message for debugging
         return NextResponse.json(
-            { success: false, error: error.message || "Failed to analyze item" },
+            { success: false, error: `Analysis failed: ${error.message || "Unknown error"}. Check server logs for details.` },
             { status: 500 }
         );
     }
