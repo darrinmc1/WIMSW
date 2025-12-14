@@ -15,7 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-export default function CreateListingPage() {
+import { Suspense } from "react";
+// ... imports remain the same ...
+
+function CreateListingContent() {
+    // ... all existing component logic (hooks, state, etc.) ...
     const [isLoading, setIsLoading] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -51,7 +55,7 @@ export default function CreateListingPage() {
                     name: name || "",
                     brand: brand || "",
                     category: category || "",
-                    condition: condition || prev.condition // Don't overwrite default string
+                    condition: condition || prev.condition
                 }));
             }
         }
@@ -367,6 +371,13 @@ export default function CreateListingPage() {
             </main>
             <Footer />
         </div>
+    );
+}
 
+export default function CreateListingPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+            <CreateListingContent />
+        </Suspense>
     );
 }

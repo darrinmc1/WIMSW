@@ -7,11 +7,21 @@ import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+"use client"
+import { useState, useEffect } from "react"
+import { BrandName } from "@/components/brand-name"
+import { Button } from "@/components/ui/button"
+import { Menu, X, User } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet"
+import { useSession } from "next-auth/react"
+
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const isLoggedIn = pathname?.includes('/history') || pathname?.includes('/market-research') || pathname?.includes('/success')
+  const { data: session } = useSession()
+  const isLoggedIn = !!session
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,7 +33,7 @@ export function Navigation() {
 
   const navItems = [
     { label: "Home", href: "/" },
-    { label: "Features", href: "/#features" },
+    { label: "Market Research", href: "/market-research" },
     { label: "Pricing", href: "/#pricing" },
     { label: "How It Works", href: "/#how-it-works" },
     { label: "FAQ", href: "/#faq" },
@@ -31,25 +41,22 @@ export function Navigation() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border/50 shadow-lg" : "bg-transparent backdrop-blur-sm"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm" : "bg-transparent backdrop-blur-sm"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-
-
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 z-50">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <span className="text-white font-bold text-lg">W</span>
             </div>
             <BrandName className="text-xl font-bold text-foreground" />
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {navItems.filter(item => {
-              // filter out some items if logged in if desired, but keeping all for now
-              return true;
-            }).map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -61,64 +68,90 @@ export function Navigation() {
 
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                  Logged In
-                </span>
                 <Link href="/dashboard">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                    My Profile
+                  <Button variant="ghost" className="text-foreground hover:bg-slate-100 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Dashboard
                   </Button>
                 </Link>
               </div>
             ) : (
-              <>
-                <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                   Log in
                 </Link>
-                <Link href="/#get-started">
-                  <Button>Get Started Free</Button>
+                <Link href="/market-research">
+                  <Button>Get Started</Button>
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          <button className="md:hidden text-foreground" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Menu (Sheet) */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-foreground">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader className="mb-6 text-left">
+                  <SheetTitle className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">W</span>
+                    </div>
+                    <span className="font-bold">Menu</span>
+                  </SheetTitle>
+                </SheetHeader>
+
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-4">
+                    {navItems.map((item) => (
+                      <SheetClose asChild key={item.href}>
+                        <Link
+                          href={item.href}
+                          className="text-lg font-medium text-foreground/90 hover:text-primary transition-colors px-2 py-1 block"
+                        >
+                          {item.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-border pt-6">
+                    {isLoggedIn ? (
+                      <div className="space-y-4">
+                        <SheetClose asChild>
+                          <Link href="/dashboard" className="w-full">
+                            <Button className="w-full justify-start gap-2" variant="outline">
+                              <User className="h-4 w-4" />
+                              My Dashboard
+                            </Button>
+                          </Link>
+                        </SheetClose>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <SheetClose asChild>
+                          <Link href="/login" className="w-full">
+                            <Button variant="outline" className="w-full">Log In</Button>
+                          </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <Link href="/market-research" className="w-full">
+                            <Button className="w-full">Get Started Free</Button>
+                          </Link>
+                        </SheetClose>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
-
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-background border-t border-border">
-          <div className="px-4 py-4 space-y-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            {isLoggedIn ? (
-              <div className="py-2 flex items-center gap-2">
-                <span className="text-sm font-medium text-green-600">Logged In</span>
-              </div>
-            ) : (
-              <>
-                <Link href="/login" className="block text-muted-foreground hover:text-foreground transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Log in
-                </Link>
-                <Link href="/#get-started" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full">Get Started Free</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   )
 }
