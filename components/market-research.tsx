@@ -335,40 +335,36 @@ export function MarketResearch() {
     const renderUploadCard = (label: string, slot: 'front' | 'back' | 'label' | 'damage') => {
         const preview = imagePreview?.[slot]
 
-        const handleCardClick = () => {
-            console.log(`[Market Research] Card clicked for slot: ${slot}`)
-            fileInputRefs.current[slot]?.click()
-        }
-
         return (
             <Card
                 key={slot}
-                onClick={handleCardClick}
-                className={`relative aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
+                className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
             >
-                <input
-                    type="file"
-                    ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, slot)}
-                />
+                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group">
+                    <input
+                        type="file"
+                        ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, slot)}
+                    />
 
-                {preview ? (
-                    <div className="absolute inset-0 w-full h-full">
-                        <img src={preview} alt={label} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Upload className="text-white h-8 w-8" />
+                    {preview ? (
+                        <div className="absolute inset-0 w-full h-full pointer-events-none">
+                            <img src={preview} alt={label} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Upload className="text-white h-8 w-8" />
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <>
-                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                            <Camera className="h-6 w-6" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-700 text-center px-2">{label}</span>
-                    </>
-                )}
+                    ) : (
+                        <>
+                            <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                                <Camera className="h-6 w-6" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-700 text-center px-2">{label}</span>
+                        </>
+                    )}
+                </label>
             </Card>
         )
     }
