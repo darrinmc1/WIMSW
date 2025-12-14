@@ -98,17 +98,44 @@ export function InteractiveDemo() {
   const [analysis, setAnalysis] = useState(templateAnalysis)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
+  const resizeImage = (base64Str: string, maxWidth = 1024, quality = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.src = base64Str
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width
+            width = maxWidth
+          }
+        } else {
+          if (height > maxWidth) {
+            width *= maxWidth / height
+            height = maxWidth
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject('Canvas context not available')
+          return
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.onerror = () => reject('Failed to load image')
+    })
+  }
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file size (10MB limit)
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(`File too large. Maximum size is 10MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-        e.target.value = ''; // Reset input
-        return;
-      }
-
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please upload a valid image file (JPG, PNG, WEBP, etc.)');
@@ -116,14 +143,30 @@ export function InteractiveDemo() {
         return;
       }
 
+      const toastId = toast.loading("Optimizing image for upload...")
+
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: reader.result as string } : photo)))
+      reader.onloadend = async () => {
+        if (typeof reader.result === 'string') {
+          try {
+            // Resize image to max 1024x1024 and 0.8 quality
+            const resizedImage = await resizeImage(reader.result, 1024, 0.8)
+            setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: resizedImage } : photo)))
+            toast.dismiss(toastId)
+            toast.success('Image uploaded successfully!')
+          } catch (err) {
+            console.error("Image resizing failed:", err)
+            toast.dismiss(toastId)
+            toast.error("Failed to process image. Please try another one.")
+          }
+        }
       }
       reader.onerror = () => {
+        toast.dismiss(toastId)
         toast.error('Failed to read image file. Please try again.');
       }
       reader.readAsDataURL(file)
+      e.target.value = '' // Reset input
     }
   }
 
@@ -133,9 +176,15 @@ export function InteractiveDemo() {
 
   const handleAnalyze = async () => {
     const frontPhoto = photos.find(p => p.category === "front")?.image
-    if (!frontPhoto) return
+    console.log('[Interactive Demo] handleAnalyze called', { hasFrontPhoto: !!frontPhoto })
+    if (!frontPhoto) {
+      console.log('[Interactive Demo] No front photo, aborting')
+      toast.error("Please upload a front photo first")
+      return
+    }
 
     setIsAnalyzing(true)
+    console.log('[Interactive Demo] Starting analysis...')
     try {
       // Call the API
       const response = await fetch("/api/analyze-item", {
@@ -265,6 +314,7 @@ export function InteractiveDemo() {
                         <input
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           className="hidden"
                           onChange={(e) => handlePhotoUpload(e, photo.category)}
                         />
@@ -294,10 +344,15 @@ export function InteractiveDemo() {
 
               <Button
                 onClick={handleAnalyze}
-                disabled={!hasMinimumPhotos}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] disabled:opacity-50 disabled:shadow-none"
+                disabled={!hasMinimumPhotos || isAnalyzing}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
               >
-                {isAnalyzed ? "Re-Analyze Item" : "Analyze Market & Price"}
+                {isAnalyzing ? (
+                  <>
+                    <span className="inline-block animate-spin mr-2">⏳</span>
+                    Analyzing...
+                  </>
+                ) : isAnalyzed ? "Re-Analyze Item" : "Analyze Market & Price"}
               </Button>
             </div>
           </Card>
