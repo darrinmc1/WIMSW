@@ -11,7 +11,7 @@ export default async function AdminDashboard() {
     const today = new Date().toISOString().split('T')[0];
     const newUsersToday = users.filter(user => user.createdAt.startsWith(today)).length;
 
-    const paidUsers = users.filter(user => user.plan !== 'free').length;
+    const paidUsers = users.filter(user => user.plan !== 'FREE').length;
     const totalRevenue = paidUsers * 19; // Assuming $19/mo avg
 
     return (
