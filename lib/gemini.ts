@@ -21,11 +21,13 @@ interface GenerateOptions {
 export async function generateWithFallback(options: GenerateOptions): Promise<string> {
   const { prompt, imagePart, responseMimeType } = options;
 
-  // Prioritize 1.5 Pro for quality, fallback to 1.5 Flash for speed
-  // All must be multimodal (support images)
-  // Using latest stable model names that work with the Gemini API
-  const models = ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro-vision"];
-  const MAX_RETRIES = 2; // Reduced to 2 to prevent timeouts with 3 models
+  // Gemini 3.0 and 2.5 are the current supported versions (1.5 deprecated April 2025)
+  const models = [
+    "gemini-3-pro-preview", // Latest cutting-edge (User requested 3.0)
+    "gemini-2.5-pro",       // Stable high-intelligence
+    "gemini-2.5-flash"      // Stable high-speed
+  ];
+  const MAX_RETRIES = 2;
 
   let lastError: any = null;
 
