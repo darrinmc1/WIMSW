@@ -91,12 +91,21 @@ export function MarketResearch() {
     const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, slot: 'front' | 'back' | 'label' | 'damage') => {
+        console.log(`[Market Research] handleImageUpload called for slot: ${slot}`)
         const file = e.target.files?.[0]
-        if (!file) return
+
+        if (!file) {
+            console.log('[Market Research] No file selected')
+            return
+        }
+
+        console.log('[Market Research] File selected:', { name: file.name, size: file.size, type: file.type })
 
         // File Validation
         if (!file.type.startsWith('image/')) {
+            console.error('[Market Research] Invalid file type:', file.type)
             toast.error("Please upload a valid image file (JPG, PNG)")
+            e.target.value = ''
             return
         }
 
@@ -104,14 +113,26 @@ export function MarketResearch() {
         const toastId = toast.loading("Optimizing image for upload...")
 
         const reader = new FileReader()
+
+        reader.onerror = () => {
+            console.error('[Market Research] FileReader error')
+            toast.dismiss(toastId)
+            toast.error('Failed to read image file. Please try again.')
+            e.target.value = ''
+        }
+
         reader.onloadend = async () => {
+            console.log('[Market Research] FileReader finished, result type:', typeof reader.result)
             if (typeof reader.result === 'string') {
                 try {
+                    console.log('[Market Research] Starting image resize...')
                     // Resize image to max 1024x1024 and 0.8 quality
                     const resizedImage = await resizeImage(reader.result, 1024, 0.8)
+                    console.log('[Market Research] Image resized successfully')
 
                     setImagePreview(prev => (prev ? { ...prev, [slot]: resizedImage } : null))
                     toast.dismiss(toastId)
+                    toast.success('Image uploaded!')
 
                     // Only analyze if it's the front image (primary)
                     if (slot === 'front') {
@@ -121,12 +142,18 @@ export function MarketResearch() {
                         console.log(`[Market Research] ${slot} image uploaded (not front, skipping auto-analyze)`)
                     }
                 } catch (err) {
-                    console.error("Image resizing failed:", err)
+                    console.error("[Market Research] Image resizing failed:", err)
                     toast.dismiss(toastId)
                     toast.error("Failed to process image. Please try another one.")
                 }
+            } else {
+                console.error('[Market Research] FileReader result is not a string')
+                toast.dismiss(toastId)
+                toast.error("Failed to read image. Please try again.")
             }
         }
+
+        console.log('[Market Research] Starting FileReader.readAsDataURL...')
         reader.readAsDataURL(file)
 
         // Reset input so same file can be selected again
@@ -308,9 +335,8 @@ export function MarketResearch() {
     const renderUploadCard = (label: string, slot: 'front' | 'back' | 'label' | 'damage') => {
         const preview = imagePreview?.[slot]
 
-        const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
-            e.preventDefault()
-            e.stopPropagation()
+        const handleCardClick = () => {
+            console.log(`[Market Research] Card clicked for slot: ${slot}`)
             fileInputRefs.current[slot]?.click()
         }
 
@@ -318,7 +344,6 @@ export function MarketResearch() {
             <Card
                 key={slot}
                 onClick={handleCardClick}
-                onTouchEnd={handleCardClick}
                 className={`relative aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
             >
                 <input
