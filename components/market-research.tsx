@@ -314,7 +314,6 @@ export function MarketResearch() {
                     ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
                     className="hidden"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleImageUpload(e, slot)}
                 />
 

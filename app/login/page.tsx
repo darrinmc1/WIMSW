@@ -16,8 +16,8 @@ function LoginContent() {
     const callbackUrl = searchParams.get('callbackUrl') || '/market-research'
 
     const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
+    const [pin, setPin] = useState('')
+    const [showPin, setShowPin] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -27,12 +27,19 @@ function LoginContent() {
         try {
             const result = await signIn('credentials', {
                 email,
-                password,
+                password: pin, // PIN is sent as password
                 redirect: false,
             })
 
             if (result?.error) {
-                toast.error(result.error)
+                // Check if error message contains attempts left info
+                if (result.error.includes('attempts left')) {
+                    toast.error(result.error, { duration: 5000 })
+                } else if (result.error.includes('locked')) {
+                    toast.error(result.error, { duration: 8000 })
+                } else {
+                    toast.error(result.error)
+                }
                 setIsLoading(false)
                 return
             }
@@ -84,29 +91,44 @@ function LoginContent() {
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium text-gray-700">Password</label>
-                            <Link href="#" className="text-sm text-indigo-600 hover:text-indigo-700">
-                                Forgot password?
-                            </Link>
+                            <label className="text-sm font-medium text-gray-700">4-Digit PIN</label>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    toast.info("Please contact support at darrinmc1@yahoo.com to reset your PIN.", {
+                                        duration: 5000
+                                    })
+                                }}
+                                className="text-sm text-indigo-600 hover:text-indigo-700 focus:outline-none touch-manipulation"
+                            >
+                                Forgot PIN?
+                            </button>
                         </div>
                         <div className="relative text-gray-900">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <Input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="••••••••"
-                                className="pl-10 pr-10 bg-white !text-gray-900"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                type={showPin ? "text" : "password"}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={4}
+                                placeholder="••••"
+                                className="pl-10 pr-10 bg-white !text-gray-900 text-center text-2xl tracking-widest"
+                                value={pin}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                                    setPin(value)
+                                }}
                                 required
                             />
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(!showPassword)}
+                                onClick={() => setShowPin(!showPin)}
                                 className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
                             >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
+                        <p className="text-xs text-gray-500">Enter your 4-digit PIN. You have 5 attempts before lockout.</p>
                     </div>
 
                     <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 text-lg" disabled={isLoading}>

@@ -17,12 +17,14 @@ export type UserRole = 'user' | 'admin';
 export interface User {
   id: string;
   email: string;
-  password: string; // hashed
+  password: string; // hashed (will be PIN hash)
   name?: string;
   plan: UserPlan;
   role: UserRole;
   createdAt: string;
   lastLogin?: string;
+  failedAttempts?: number;
+  lockedUntil?: string;
 }
 
 // Simple in-memory cache
@@ -41,7 +43,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     if (!userCache || (now - cacheTimestamp > CACHE_TTL)) {
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Users!A:H',
+        range: 'Users!A:J', // Extended to column J for lockout fields
       });
 
       const rows = response.data.values;
@@ -62,6 +64,8 @@ export async function getUserByEmail(email: string): Promise<User | null> {
               createdAt: row[5],
               lastLogin: row[6],
               role: role && ['user', 'admin'].includes(role) ? role : 'user',
+              failedAttempts: row[8] ? parseInt(row[8]) : 0,
+              lockedUntil: row[9] || undefined,
             };
             newCache.set(row[1].toLowerCase(), user);
           }
@@ -234,6 +238,105 @@ export async function getAllUsers(): Promise<User[]> {
     console.error('Error fetching all users:', error);
     return [];
   }
+}
+
+/**
+ * Increment failed login attempts and lock account if needed
+ */
+export async function incrementFailedAttempts(email: string): Promise<{ isLocked: boolean; attemptsLeft: number }> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Users!A:J',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return { isLocked: false, attemptsLeft: 5 };
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[1]?.toLowerCase() === email.toLowerCase()) {
+        const rowNumber = i + 1;
+        const currentAttempts = row[8] ? parseInt(row[8]) : 0;
+        const newAttempts = currentAttempts + 1;
+
+        // Lock if 5 or more attempts
+        if (newAttempts >= 5) {
+          const lockUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // Lock for 15 minutes
+          await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Users!I${rowNumber}:J${rowNumber}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+              values: [[newAttempts.toString(), lockUntil]],
+            },
+          });
+          userCache = null;
+          return { isLocked: true, attemptsLeft: 0 };
+        }
+
+        // Update failed attempts
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `Users!I${rowNumber}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[newAttempts.toString()]],
+          },
+        });
+        userCache = null;
+        return { isLocked: false, attemptsLeft: 5 - newAttempts };
+      }
+    }
+    return { isLocked: false, attemptsLeft: 5 };
+  } catch (error) {
+    console.error('Error incrementing failed attempts:', error);
+    return { isLocked: false, attemptsLeft: 5 };
+  }
+}
+
+/**
+ * Reset failed login attempts on successful login
+ */
+export async function resetFailedAttempts(email: string): Promise<void> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Users!A:J',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[1]?.toLowerCase() === email.toLowerCase()) {
+        const rowNumber = i + 1;
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `Users!I${rowNumber}:J${rowNumber}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [['0', '']], // Reset attempts and clear lockout
+          },
+        });
+        userCache = null;
+        break;
+      }
+    }
+  } catch (error) {
+    console.error('Error resetting failed attempts:', error);
+  }
+}
+
+/**
+ * Check if user is locked out
+ */
+export function isUserLocked(user: User): boolean {
+  if (!user.lockedUntil) return false;
+  const lockTime = new Date(user.lockedUntil).getTime();
+  const now = Date.now();
+  return now < lockTime;
 }
 
 /**
