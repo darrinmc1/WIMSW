@@ -23,10 +23,11 @@ export async function generateWithFallback(options: GenerateOptions): Promise<st
 
   // Prioritize 1.5 Pro for quality, fallback to 1.5 Flash for speed, and 1.5 Flash-8b as ultra-light backup
   // All must be multimodal (support images)
-  // Using -002 and -001 model versions for paid API access
-  const models = ["gemini-1.5-pro-002", "gemini-1.5-flash-002", "gemini-1.5-flash-8b-001"];
-  const MAX_RETRIES = 3; // Increased to 3 retries
+  // Using -002 and -001 model versions for paid API access, plus generic alias
+  const models = ["gemini-1.5-pro-002", "gemini-1.5-flash-002", "gemini-1.5-flash-8b-001", "gemini-1.5-flash"];
+  const MAX_RETRIES = 2; // Reduced to 2 to prevent timeouts with 4 models
 
+  let lastError: any = null;
 
   for (const modelName of models) {
     let attempts = 0;
@@ -49,6 +50,7 @@ export async function generateWithFallback(options: GenerateOptions): Promise<st
         return response.text();
       } catch (error: any) {
         console.error(`[AI Error] ${modelName} failed:`, error.message);
+        lastError = error;
 
         const isUnavailable = error.message?.includes("503") ||
           error.message?.includes("overloaded") ||
@@ -61,7 +63,7 @@ export async function generateWithFallback(options: GenerateOptions): Promise<st
         if (isUnavailable) {
           attempts++;
           if (attempts <= MAX_RETRIES) {
-            // Exponential backoff: 2s, 4s, 8s
+            // Exponential backoff: 1s, 2s
             const delay = Math.pow(2, attempts) * 1000;
             console.warn(`[AI Warning] ${modelName} overloaded/error. Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -69,12 +71,19 @@ export async function generateWithFallback(options: GenerateOptions): Promise<st
           }
         }
 
-        // Break the while loop to try the next model in the list
+        // If not unavailable (e.g. 400 Bad Request, Safety), or retries exhausted, try next model
         break;
       }
     }
   }
-  throw new Error("All AI models are currently overloaded or failing. Please try again in a few moments.");
+
+  // If we get here, all models failed. Throw the last error to preserve the cause (e.g. Safety, 400)
+  // instead of a generic "overloaded" message which hides the real issue.
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error("AI service unavailable. All models failed.");
 }
 
 export { genAI };
