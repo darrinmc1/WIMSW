@@ -180,6 +180,18 @@ export function MarketResearch() {
             })
 
             if (!response.ok) {
+                // Log admin debug info from response headers
+                const errorId = response.headers.get('X-Error-ID');
+                const errorDebug = response.headers.get('X-Error-Debug');
+                const errorTimestamp = response.headers.get('X-Error-Timestamp');
+
+                console.error("=== API ERROR (Admin Debug Info) ===");
+                console.error("Error ID:", errorId);
+                console.error("Error Debug:", errorDebug);
+                console.error("Timestamp:", errorTimestamp);
+                console.error("Status:", response.status);
+                console.error("====================================");
+
                 if (response.status === 429) {
                     throw new Error("We're experiencing high traffic. Please try again in a minute.")
                 }

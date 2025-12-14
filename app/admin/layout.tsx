@@ -20,6 +20,7 @@ export default async function AdminLayout({
     const navItems = [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
         { label: "Users", href: "/admin/users", icon: Users },
+        { label: "System Logs", href: "https://vercel.com", icon: FileText },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ]
 

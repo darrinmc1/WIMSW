@@ -82,8 +82,13 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, data });
     } catch (error: any) {
-        // Log detailed error information for debugging
+        // Generate unique error ID for tracking
+        const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+        // Log detailed error information for admins to review in Vercel logs
         console.error("=== ANALYZE ITEM ERROR ===");
+        console.error("Error ID:", errorId);
+        console.error("Timestamp:", new Date().toISOString());
         console.error("Error Type:", error.constructor.name);
         console.error("Error Message:", error.message);
         console.error("Error Status:", error.status);
@@ -92,50 +97,51 @@ export async function POST(req: Request) {
         console.error("Stack:", error.stack);
         console.error("========================");
 
+        // Determine user-friendly and admin messages
+        let userMessage = "Something went wrong analyzing your item. Please try again.";
+        let adminDebug = error.message || "Unknown error";
+
         // Parse JSON errors from AI response
         if (error.message?.includes("JSON") || error.message?.includes("parse")) {
-            return NextResponse.json(
-                { success: false, error: `AI returned invalid format. Try uploading a clearer photo. (Debug: ${error.message})` },
-                { status: 500 }
-            );
+            userMessage = "The AI couldn't analyze this image. Try uploading a clearer photo.";
+            adminDebug = `JSON Parse Error: ${error.message}`;
         }
-
         // Check for API key/permission errors
-        if (error.message?.includes("API key") || error.message?.includes("PERMISSION_DENIED") || error.message?.includes("API_KEY_INVALID")) {
-            return NextResponse.json(
-                { success: false, error: `Gemini API authentication error. Check if your API key is valid and has billing enabled. (Debug: ${error.message})` },
-                { status: 500 }
-            );
+        else if (error.message?.includes("API key") || error.message?.includes("PERMISSION_DENIED") || error.message?.includes("API_KEY_INVALID")) {
+            userMessage = "Our AI service is temporarily unavailable. Please try again later or contact support.";
+            adminDebug = `Gemini API Authentication Failed: ${error.message}. Check API key validity and billing at https://console.cloud.google.com/`;
         }
-
         // Check for rate limit/quota errors
-        if (error.status === 429 || error.message?.includes("429") || error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED")) {
-            return NextResponse.json(
-                { success: false, error: `Gemini API quota exceeded. Wait a minute or check your API billing at https://console.cloud.google.com/` },
-                { status: 429 }
-            );
+        else if (error.status === 429 || error.message?.includes("429") || error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED")) {
+            userMessage = "We're experiencing high demand. Please wait a minute and try again.";
+            adminDebug = `Gemini API Quota Exceeded: ${error.message}. Check billing and quotas at https://console.cloud.google.com/`;
         }
-
         // Check for network/connection errors
-        if (error.message?.includes("fetch") || error.message?.includes("network") || error.message?.includes("ECONNREFUSED") || error.message?.includes("ENOTFOUND")) {
-            return NextResponse.json(
-                { success: false, error: `Cannot reach Gemini API servers. Check your internet connection or Gemini service status. (Debug: ${error.message})` },
-                { status: 503 }
-            );
+        else if (error.message?.includes("fetch") || error.message?.includes("network") || error.message?.includes("ECONNREFUSED") || error.message?.includes("ENOTFOUND")) {
+            userMessage = "Network error. Please check your internet connection and try again.";
+            adminDebug = `Network/Connection Error: ${error.message}. Cannot reach Gemini API servers.`;
         }
-
         // Check for model errors
-        if (error.message?.includes("models") || error.message?.includes("overload")) {
-            return NextResponse.json(
-                { success: false, error: `All Gemini models are busy or unavailable. Try again in a few seconds. (Debug: ${error.message})` },
-                { status: 503 }
-            );
+        else if (error.message?.includes("models") || error.message?.includes("overload")) {
+            userMessage = "Our AI is currently overloaded. Please try again in a few seconds.";
+            adminDebug = `Gemini Model Overload: ${error.message}. All models are busy or unavailable.`;
         }
 
-        // Return the actual error message for debugging
+        // Return response with user-friendly message and admin debug info in headers
         return NextResponse.json(
-            { success: false, error: `Analysis failed: ${error.message || "Unknown error"}. Check server logs for details.` },
-            { status: 500 }
+            {
+                success: false,
+                error: userMessage,
+                errorId: errorId  // Users can provide this when contacting support
+            },
+            {
+                status: error.status || 500,
+                headers: {
+                    'X-Error-ID': errorId,
+                    'X-Error-Debug': adminDebug,
+                    'X-Error-Timestamp': new Date().toISOString()
+                }
+            }
         );
     }
 }
