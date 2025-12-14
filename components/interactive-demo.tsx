@@ -311,7 +311,8 @@ export function InteractiveDemo() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Waiting for Item...</h3>
                 <p className="text-muted-foreground max-w-sm">
-                  Upload photos on the left to unlock AI-powered market analysis, simple cross-posting, and profit predictions.
+                  <span className="hidden md:inline">Upload photos on the left</span>
+                  <span className="md:hidden">Upload photos above</span> to unlock AI-powered market analysis, simple cross-posting, and profit predictions.
                 </p>
               </Card>
             ) : (

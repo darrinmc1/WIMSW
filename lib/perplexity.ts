@@ -54,7 +54,7 @@ Focus on SOLD listings and actual market data, not just asking prices.
 `.trim();
 
     const response = await perplexity.chat.completions.create({
-      model: "llama-3.1-sonar-large-128k-online",
+      model: "llama-3.1-sonar-large-128k-chat",
       messages: [
         {
           role: "system",

@@ -19,7 +19,8 @@ import {
     Camera,
     Upload,
     X,
-    ShoppingBag
+    ShoppingBag,
+    Sparkles
 } from "lucide-react"
 
 // Types based on the API response structure provided
@@ -98,21 +99,31 @@ export function MarketResearch() {
             toast.error("Please upload a valid image file (JPG, PNG)")
             return
         }
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            toast.error("Image size too large. Please upload an image under 10MB.")
-            return
-        }
+
+        // Processing Toast
+        const toastId = toast.loading("Optimizing image for upload...")
 
         const reader = new FileReader()
-        reader.onloadend = () => {
-            // Validate result is a string
+        reader.onloadend = async () => {
             if (typeof reader.result === 'string') {
-                const base64String = reader.result
-                setImagePreview(prev => (prev ? { ...prev, [slot]: base64String } : null))
+                try {
+                    // Resize image to max 1024x1024 and 0.8 quality
+                    const resizedImage = await resizeImage(reader.result, 1024, 0.8)
 
-                // Only analyze if it's the front image (primary)
-                if (slot === 'front') {
-                    analyzeImage(base64String)
+                    setImagePreview(prev => (prev ? { ...prev, [slot]: resizedImage } : null))
+                    toast.dismiss(toastId)
+
+                    // Only analyze if it's the front image (primary)
+                    if (slot === 'front') {
+                        console.log('[Market Research] Front image resized & uploaded, auto-analyzing...')
+                        analyzeImage(resizedImage)
+                    } else {
+                        console.log(`[Market Research] ${slot} image uploaded (not front, skipping auto-analyze)`)
+                    }
+                } catch (err) {
+                    console.error("Image resizing failed:", err)
+                    toast.dismiss(toastId)
+                    toast.error("Failed to process image. Please try another one.")
                 }
             }
         }
@@ -120,6 +131,42 @@ export function MarketResearch() {
 
         // Reset input so same file can be selected again
         e.target.value = ''
+    }
+
+    // Utility to resize image
+    const resizeImage = (base64Str: string, maxWidth = 1024, quality = 0.8): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image()
+            img.src = base64Str
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                let width = img.width
+                let height = img.height
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width
+                        width = maxWidth
+                    }
+                } else {
+                    if (height > maxWidth) {
+                        width *= maxWidth / height
+                        height = maxWidth
+                    }
+                }
+
+                canvas.width = width
+                canvas.height = height
+                const ctx = canvas.getContext('2d')
+                if (!ctx) {
+                    reject('Canvas context not available')
+                    return
+                }
+                ctx.drawImage(img, 0, 0, width, height)
+                resolve(canvas.toDataURL('image/jpeg', quality))
+            }
+            img.onerror = (err) => reject(err)
+        })
     }
 
     const analyzeImage = async (base64Image: string) => {
@@ -163,7 +210,12 @@ export function MarketResearch() {
     }
 
     const handleResearch = async () => {
-        if (!itemDetails) return
+        console.log('[Market Research] handleResearch called', { itemDetails })
+        if (!itemDetails) {
+            console.log('[Market Research] No item details, aborting')
+            toast.error("Please upload and analyze an item first")
+            return
+        }
 
         setLoading(true)
         setError(null)
@@ -210,9 +262,14 @@ export function MarketResearch() {
         setDescription("")
     }
 
-    const filteredItems = searchResults?.similar_items.filter(
+    const filteredItems = (searchResults?.similar_items.filter(
         (item) => selectedPlatform === "all" || item.platform.toLowerCase() === selectedPlatform.toLowerCase()
-    ) || []
+    ) || []).filter((item, index, self) =>
+        // Deduplicate based on title and price
+        index === self.findIndex((t) => (
+            t.title === item.title && t.price === item.price
+        ))
+    )
 
     const getPlatformColor = (platform: string) => {
         switch (platform.toLowerCase()) {
@@ -239,10 +296,17 @@ export function MarketResearch() {
     const renderUploadCard = (label: string, slot: 'front' | 'back' | 'label' | 'damage') => {
         const preview = imagePreview?.[slot]
 
+        const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+            e.preventDefault()
+            e.stopPropagation()
+            fileInputRefs.current[slot]?.click()
+        }
+
         return (
             <Card
                 key={slot}
-                onClick={() => fileInputRefs.current[slot]?.click()}
+                onClick={handleCardClick}
+                onTouchEnd={handleCardClick}
                 className={`relative aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
             >
                 <input
@@ -250,6 +314,7 @@ export function MarketResearch() {
                     ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
                     className="hidden"
                     accept="image/*"
+                    capture="environment"
                     onChange={(e) => handleImageUpload(e, slot)}
                 />
 
@@ -294,7 +359,7 @@ export function MarketResearch() {
 
                     {/* Left: Image Upload */}
                     {/* Left: Image Uploads & Description */}
-                    <div className="md:col-span-1 space-y-6">
+                    <div className={!itemDetails && !analyzingImage ? "md:col-span-3 max-w-4xl mx-auto w-full space-y-8 transition-all duration-500 ease-in-out" : "md:col-span-1 space-y-6 transition-all duration-500 ease-in-out"}>
                         {/* 4-Grid Image Upload */}
                         <div className="grid grid-cols-2 gap-4">
                             {renderUploadCard('Front View', 'front')}
@@ -302,6 +367,17 @@ export function MarketResearch() {
                             {renderUploadCard('Brand Label', 'label')}
                             {renderUploadCard('Damage/Wear', 'damage')}
                         </div>
+
+                        {/* Manual Analyze Button (Fallback if auto-trigger fails) */}
+                        {imagePreview?.front && !itemDetails && !analyzingImage && (
+                            <Button
+                                onClick={() => analyzeImage(imagePreview.front!)}
+                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md animate-in fade-in"
+                            >
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                Analyze Item Details
+                            </Button>
+                        )}
 
                         {/* Description & Details Fields */}
                         <Card className="p-4 border-0 shadow-lg bg-white space-y-4">
@@ -341,64 +417,74 @@ export function MarketResearch() {
                     </div>
 
                     {/* Right: Item Details & Actions */}
-                    <Card className="p-6 md:col-span-2 rounded-xl shadow-lg border-0 bg-white/80 backdrop-blur-sm flex flex-col justify-center">
-                        {!itemDetails ? (
-                            <div className="text-center text-gray-400 py-10">
-                                <Tag className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                <p>Upload an image to automatically detail your item</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900">{itemDetails.name}</h2>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            <Badge variant="secondary">{itemDetails.brand}</Badge>
-                                            <Badge variant="outline">{itemDetails.category}</Badge>
-                                            <Badge variant="outline">{itemDetails.condition}</Badge>
-                                            {itemDetails.size !== "N/A" && <Badge variant="outline">{itemDetails.size}</Badge>}
+                    {(itemDetails || analyzingImage) && (
+                        <Card className="p-6 md:col-span-2 rounded-xl shadow-lg border-0 bg-white/80 backdrop-blur-sm flex flex-col justify-center animate-in fade-in slide-in-from-right-8 duration-700">
+                            {analyzingImage ? (
+                                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-indigo-100 rounded-full animate-ping opacity-75"></div>
+                                        <div className="relative p-4 bg-indigo-50 rounded-full">
+                                            <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm text-gray-500">Est. Value</div>
-                                        <div className="text-2xl font-bold text-green-600">${itemDetails.estimated_price}</div>
+                                    <div className="text-center space-y-1">
+                                        <p className="text-xl font-semibold text-gray-900">Analyzing your item...</p>
+                                        <p className="text-sm text-gray-500">Our AI is identifying the brand, condition, and details</p>
                                     </div>
                                 </div>
+                            ) : itemDetails && (
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-gray-900">{itemDetails.name}</h2>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                <Badge variant="secondary">{itemDetails.brand}</Badge>
+                                                <Badge variant="outline">{itemDetails.category}</Badge>
+                                                <Badge variant="outline">{itemDetails.condition}</Badge>
+                                                {itemDetails.size !== "N/A" && <Badge variant="outline">{itemDetails.size}</Badge>}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-500">Est. Value</div>
+                                            <div className="text-2xl font-bold text-green-600">${itemDetails.estimated_price}</div>
+                                        </div>
+                                    </div>
 
-                                <div className="pt-4 border-t border-gray-100 space-y-4">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="localOnly"
-                                            checked={isLocalOnly}
-                                            onChange={(e) => setIsLocalOnly(e.target.checked)}
-                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                        />
-                                        <label htmlFor="localOnly" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
-                                            Search Local Only (Large items, furniture, etc.)
-                                        </label>
+                                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="localOnly"
+                                                checked={isLocalOnly}
+                                                onChange={(e) => setIsLocalOnly(e.target.checked)}
+                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                            />
+                                            <label htmlFor="localOnly" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                                                Search Local Only (Large items, furniture, etc.)
+                                            </label>
+                                        </div>
+                                        <Button
+                                            onClick={handleResearch}
+                                            disabled={loading || !itemDetails}
+                                            className="w-full h-12 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                    Scanning Marketplaces...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Search className="mr-2 h-5 w-5" />
+                                                    Run Market Research
+                                                </>
+                                            )}
+                                        </Button>
                                     </div>
-                                    <Button
-                                        onClick={handleResearch}
-                                        disabled={loading}
-                                        className="w-full h-12 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-md"
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                Scanning Marketplaces...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Search className="mr-2 h-5 w-5" />
-                                                Run Market Research
-                                            </>
-                                        )}
-                                    </Button>
                                 </div>
-                            </div>
-                        )}
-                    </Card>
+                            )}
+                        </Card>
+                    )}
 
                     {searchResults && (
                         <div className="flex flex-col sm:flex-row sm:justify-end -mt-4 mb-2 gap-3">
@@ -558,9 +644,16 @@ export function MarketResearch() {
                                     return (
                                         <Card key={index} className="p-4 border-gray-100 hover:border-indigo-100 transition-colors">
                                             <div className="flex justify-between items-start mb-2">
-                                                <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none">
-                                                    {item.platform_name.toUpperCase()} {item.status === 'sold' && '(SOLD LISTING)'}
-                                                </Badge>
+                                                <div className="flex gap-2">
+                                                    <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none">
+                                                        {item.platform_name.toUpperCase()}
+                                                    </Badge>
+                                                    {item.status === 'sold' && (
+                                                        <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 font-bold">
+                                                            SOLD
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                                 <a
                                                     href={getPlatformLink(item.platform_name, (item as any).search_term || item.title)}
                                                     target="_blank"
