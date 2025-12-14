@@ -11,8 +11,8 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: 'v4', auth });
 const spreadsheetId = process.env.GOOGLE_SHEET_ID!
 
-export type UserPlan = 'free' | 'premium' | 'enterprise';
-export type UserRole = 'user' | 'admin';
+export type UserPlan = 'FREE' | 'PREMIUM' | 'ENTERPRISE';
+export type UserRole = 'USER' | 'ADMIN';
 
 export interface User {
   id: string;
@@ -60,10 +60,10 @@ export async function getUserByEmail(email: string): Promise<User | null> {
               email: row[1],
               password: row[2],
               name: row[3],
-              plan: plan && ['free', 'premium', 'enterprise'].includes(plan) ? plan : 'free',
+              plan: (plan?.toUpperCase() === 'PREMIUM' ? 'PREMIUM' : plan?.toUpperCase() === 'ENTERPRISE' ? 'ENTERPRISE' : 'FREE') as UserPlan,
               createdAt: row[5],
               lastLogin: row[6],
-              role: role && ['user', 'admin'].includes(role) ? role : 'user',
+              role: (role?.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER') as UserRole,
               failedAttempts: row[8] ? parseInt(row[8]) : 0,
               lockedUntil: row[9] || undefined,
             };
@@ -106,10 +106,10 @@ export async function createUser(email: string, hashedPassword: string, name?: s
           email,
           hashedPassword,
           name || '',
-          'free', // default plan
+          'FREE', // default plan
           createdAt,
           '', // lastLogin (empty initially)
-          'user', // default role
+          'USER', // default role
         ]],
       },
     });
@@ -122,8 +122,8 @@ export async function createUser(email: string, hashedPassword: string, name?: s
       email,
       password: hashedPassword,
       name,
-      plan: 'free',
-      role: 'user',
+      plan: 'FREE',
+      role: 'USER',
       createdAt,
     };
   } catch (error) {
@@ -228,10 +228,10 @@ export async function getAllUsers(): Promise<User[]> {
         email: row[1],
         password: row[2], // In a real app, maybe don't return this
         name: row[3],
-        plan: plan && ['free', 'premium', 'enterprise'].includes(plan) ? plan : 'free',
+        plan: (plan?.toUpperCase() === 'PREMIUM' ? 'PREMIUM' : plan?.toUpperCase() === 'ENTERPRISE' ? 'ENTERPRISE' : 'FREE') as UserPlan,
         createdAt: row[5],
         lastLogin: row[6],
-        role: role && ['user', 'admin'].includes(role) ? role : 'user',
+        role: (role?.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER') as UserRole,
       };
     });
   } catch (error) {

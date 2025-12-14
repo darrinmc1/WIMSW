@@ -27,6 +27,7 @@ export async function generateWithFallback(options: GenerateOptions): Promise<st
   const models = ["gemini-1.5-pro-002", "gemini-1.5-flash-002", "gemini-1.5-flash-8b-001"];
   const MAX_RETRIES = 3; // Increased to 3 retries
 
+
   for (const modelName of models) {
     let attempts = 0;
     while (attempts <= MAX_RETRIES) {
