@@ -98,7 +98,7 @@ export async function POST(req: Request) {
         console.error("========================");
 
         // Determine user-friendly and admin messages
-        let userMessage = "Something went wrong analyzing your item. Please try again.";
+        let userMessage = `Something went wrong analyzing your item. Debug Error: ${error.message}`;
         let adminDebug = error.message || "Unknown error";
 
         // Parse JSON errors from AI response
