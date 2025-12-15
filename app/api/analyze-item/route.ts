@@ -1,17 +1,32 @@
 import { generateWithFallback } from "@/lib/gemini";
 import { analyzeItemSchema, validateRequest } from "@/lib/validations";
-import { rateLimit, getClientIdentifier, analyzeItemLimiter } from "@/lib/rate-limit";
+import { rateLimit, getClientIdentifier, analyzeItemLimiter, freeUserLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
     try {
-        // Rate limiting: 5 requests per minute
+        // Check authentication status
+        const session = await getServerSession(authOptions);
+        const isAuthenticated = !!session;
+
+        // Rate limiting: Free users get 3/day, authenticated users get 5/minute
         const identifier = getClientIdentifier(req);
-        const rateLimitResult = await rateLimit(identifier, analyzeItemLimiter);
+        const limiter = isAuthenticated ? analyzeItemLimiter : freeUserLimiter;
+        const rateLimitResult = await rateLimit(identifier, limiter);
 
         if (!rateLimitResult.success) {
+            const errorMessage = isAuthenticated
+                ? "Too many requests. Please try again later."
+                : "You've reached your free daily limit of 3 analyses. Sign up to continue analyzing items!";
+
             return NextResponse.json(
-                { success: false, error: "Too many requests. Please try again later." },
+                {
+                    success: false,
+                    error: errorMessage,
+                    requiresAuth: !isAuthenticated
+                },
                 {
                     status: 429,
                     headers: {

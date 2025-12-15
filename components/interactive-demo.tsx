@@ -134,40 +134,57 @@ export function InteractiveDemo() {
   }
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
+    console.log('[Interactive Demo] handlePhotoUpload called for:', category)
     const file = e.target.files?.[0]
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload a valid image file (JPG, PNG, WEBP, etc.)');
-        e.target.value = ''; // Reset input
-        return;
-      }
 
-      const toastId = toast.loading("Optimizing image for upload...")
-
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        if (typeof reader.result === 'string') {
-          try {
-            // Resize image to max 1024x1024 and 0.8 quality
-            const resizedImage = await resizeImage(reader.result, 1024, 0.8)
-            setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: resizedImage } : photo)))
-            toast.dismiss(toastId)
-            toast.success('Image uploaded successfully!')
-          } catch (err) {
-            console.error("Image resizing failed:", err)
-            toast.dismiss(toastId)
-            toast.error("Failed to process image. Please try another one.")
-          }
-        }
-      }
-      reader.onerror = () => {
-        toast.dismiss(toastId)
-        toast.error('Failed to read image file. Please try again.');
-      }
-      reader.readAsDataURL(file)
-      e.target.value = '' // Reset input
+    if (!file) {
+      console.log('[Interactive Demo] No file selected')
+      return
     }
+
+    console.log('[Interactive Demo] File selected:', { name: file.name, size: file.size, type: file.type })
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      console.error('[Interactive Demo] Invalid file type:', file.type)
+      toast.error('Please upload a valid image file (JPG, PNG, WEBP, etc.)');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    const toastId = toast.loading("Optimizing image for upload...")
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      console.log('[Interactive Demo] FileReader finished, result type:', typeof reader.result)
+      if (typeof reader.result === 'string') {
+        try {
+          console.log('[Interactive Demo] Starting image resize...')
+          // Resize image to max 1024x1024 and 0.8 quality
+          const resizedImage = await resizeImage(reader.result, 1024, 0.8)
+          console.log('[Interactive Demo] Image resized successfully')
+          setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: resizedImage } : photo)))
+          toast.dismiss(toastId)
+          toast.success('Image uploaded successfully!')
+        } catch (err) {
+          console.error("[Interactive Demo] Image resizing failed:", err)
+          toast.dismiss(toastId)
+          toast.error("Failed to process image. Please try another one.")
+        }
+      } else {
+        console.error('[Interactive Demo] FileReader result is not a string')
+        toast.dismiss(toastId)
+        toast.error("Failed to read image. Please try again.")
+      }
+    }
+    reader.onerror = () => {
+      console.error('[Interactive Demo] FileReader error')
+      toast.dismiss(toastId)
+      toast.error('Failed to read image file. Please try again.');
+    }
+    console.log('[Interactive Demo] Starting FileReader.readAsDataURL...')
+    reader.readAsDataURL(file)
+    e.target.value = '' // Reset input
   }
 
   const handleRemovePhoto = (category: PhotoCategory) => {
@@ -208,6 +225,11 @@ export function InteractiveDemo() {
         console.error("====================================");
 
         if (response.status === 429) {
+          const data = await response.json()
+          // Check if user hit free limit and needs to sign up
+          if (data.requiresAuth) {
+            throw new Error(data.error || "Free limit reached")
+          }
           throw new Error("System busy")
         }
         const data = await response.json()
@@ -254,7 +276,15 @@ export function InteractiveDemo() {
       }
     } catch (error: any) {
       console.error("Demo analysis failed", error)
-      if (error.message.includes("System busy")) {
+      if (error.message.includes("Free limit reached") || error.message.includes("free daily limit")) {
+        toast.error(error.message, {
+          duration: 6000,
+          action: {
+            label: "Sign Up",
+            onClick: () => window.location.href = "/login"
+          }
+        })
+      } else if (error.message.includes("System busy")) {
         toast.error("High demand! Our AI agents are busy. Please wait a moment and try again.")
       } else {
         toast.error("Something went wrong with the analysis. Please try again.")
@@ -322,10 +352,12 @@ export function InteractiveDemo() {
                         </button>
                       </>
                     ) : (
-                      <label className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
+                      <label htmlFor={`photo-upload-${photo.category}`} className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
                         <input
+                          id={`photo-upload-${photo.category}`}
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           className="hidden"
                           onChange={(e) => handlePhotoUpload(e, photo.category)}
                         />

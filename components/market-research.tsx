@@ -220,7 +220,17 @@ export function MarketResearch() {
                 console.error("====================================");
 
                 if (response.status === 429) {
-                    throw new Error("We're experiencing high traffic. Please try again in a minute.")
+                    const text = await response.text();
+                    try {
+                        const data = JSON.parse(text);
+                        // Check if user hit free limit and needs to sign up
+                        if (data.requiresAuth) {
+                            throw new Error(data.error || "Free limit reached")
+                        }
+                        throw new Error(data.error || "We're experiencing high traffic. Please try again in a minute.")
+                    } catch (e) {
+                        throw new Error("We're experiencing high traffic. Please try again in a minute.")
+                    }
                 }
                 const text = await response.text();
                 try {
@@ -242,7 +252,19 @@ export function MarketResearch() {
             console.error("Analysis Error:", err)
             const errorMsg = err.message || "Failed to identify item from image."
             setError(errorMsg)
-            toast.error(errorMsg)
+
+            // Show special toast with sign-up action if free limit reached
+            if (errorMsg.includes("Free limit reached") || errorMsg.includes("free daily limit")) {
+                toast.error(errorMsg, {
+                    duration: 6000,
+                    action: {
+                        label: "Sign Up",
+                        onClick: () => window.location.href = "/login"
+                    }
+                })
+            } else {
+                toast.error(errorMsg)
+            }
         } finally {
             setAnalyzingImage(false)
         }
@@ -340,12 +362,14 @@ export function MarketResearch() {
                 key={slot}
                 className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
             >
-                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group">
+                <label htmlFor={`market-upload-${slot}`} className="w-full h-full flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group">
                     <input
+                        id={`market-upload-${slot}`}
                         type="file"
                         ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
                         className="hidden"
                         accept="image/*"
+                        capture="environment"
                         onChange={(e) => handleImageUpload(e, slot)}
                     />
 
