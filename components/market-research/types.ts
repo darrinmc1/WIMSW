@@ -12,6 +12,13 @@ export interface SimilarItem {
     url: string
 }
 
+export interface ImagePreview {
+    front: string | null;
+    back: string | null;
+    label: string | null;
+    damage: string | null;
+}
+
 export interface Statistics {
     total_found: number
     average_price: number

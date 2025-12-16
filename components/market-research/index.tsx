@@ -1,7 +1,8 @@
-// Re-export the main component from parent directory
-export { MarketResearch } from '../market-research'
 
-// Also export subcomponents for direct use
-export { ImageUploadSection } from './ImageUploadSection'
-export { ItemDetailsForm } from './ItemDetailsForm'
+// Export shared types
 export * from './types'
+
+// Export sub-components
+export * from './image-upload-grid'
+export * from './item-details-card'
+export * from './market-results'
