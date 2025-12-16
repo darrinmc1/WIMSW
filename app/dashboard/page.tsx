@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { ResearchHistoryList, ResearchRecord } from "@/components/research-history-list"
-import { User, Shield, History, WalletCards } from "lucide-react"
+import { User, Shield, History, WalletCards, Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
@@ -220,7 +220,14 @@ export default function DashboardPage() {
                                         />
                                     </div>
                                     <Button type="submit" disabled={passwordLoading}>
-                                        {passwordLoading ? "Updating..." : "Update Password"}
+                                        {passwordLoading ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            "Update Password"
+                                        )}
                                     </Button>
                                 </form>
                             </CardContent>

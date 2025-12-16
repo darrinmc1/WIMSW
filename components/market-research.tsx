@@ -70,6 +70,7 @@ interface AnalyzedItem {
 
 export function MarketResearch() {
     const [loading, setLoading] = useState(false)
+    const [saving, setSaving] = useState(false)
     const [isLocalOnly, setIsLocalOnly] = useState(false)
     const [sizeInput, setSizeInput] = useState("")
     const [ageInput, setAgeInput] = useState("")
@@ -564,6 +565,7 @@ export function MarketResearch() {
                             <Button
                                 onClick={async () => {
                                     if (!searchResults || !itemDetails) return
+                                    setSaving(true)
                                     try {
                                         const response = await fetch('/api/save-research', {
                                             method: 'POST',
@@ -585,13 +587,25 @@ export function MarketResearch() {
                                     } catch (e) {
                                         console.error(e)
                                         toast.error("Failed to save")
+                                    } finally {
+                                        setSaving(false)
                                     }
                                 }}
+                                disabled={saving}
                                 variant="outline"
-                                className="w-full sm:w-auto bg-white border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                                className="w-full sm:w-auto bg-white border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 disabled:opacity-50"
                             >
-                                <TrendingUp className="mr-2 h-4 w-4" />
-                                Save to History
+                                {saving ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <TrendingUp className="mr-2 h-4 w-4" />
+                                        Save to History
+                                    </>
+                                )}
                             </Button>
                         </div>
                     )}
