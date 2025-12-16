@@ -357,7 +357,6 @@ export function InteractiveDemo() {
                           id={`photo-upload-${photo.category}`}
                           type="file"
                           accept="image/*"
-                          capture="environment"
                           className="hidden"
                           onChange={(e) => handlePhotoUpload(e, photo.category)}
                         />
