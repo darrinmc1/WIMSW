@@ -162,8 +162,12 @@ export function InteractiveDemo() {
           console.log('[Interactive Demo] Starting image resize...')
           // Resize image to max 1024x1024 and 0.8 quality
           const resizedImage = await resizeImage(reader.result, 1024, 0.8)
-          console.log('[Interactive Demo] Image resized successfully')
-          setPhotos((prev) => prev.map((photo) => (photo.category === category ? { ...photo, image: resizedImage } : photo)))
+          console.log('[Interactive Demo] Image resized successfully, updating state...')
+          setPhotos((prev) => {
+            const updated = prev.map((photo) => (photo.category === category ? { ...photo, image: resizedImage } : photo))
+            console.log('[Interactive Demo] State updated for category:', category, 'Has image:', !!updated.find(p => p.category === category)?.image)
+            return updated
+          })
           toast.dismiss(toastId)
           toast.success('Image uploaded successfully!')
         } catch (err) {
@@ -340,6 +344,7 @@ export function InteractiveDemo() {
                     {photo.image ? (
                       <>
                         <img
+                          key={photo.image.substring(0, 50)}
                           src={photo.image}
                           alt={photo.label}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
