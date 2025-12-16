@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
-import { ArrowLeft, Mail, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Mail, CheckCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BrandName } from "@/components/brand-name"
 
@@ -107,7 +107,14 @@ export default function ForgotPasswordPage() {
                         className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 text-base font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
                         disabled={isLoading}
                     >
-                        {isLoading ? 'Sending...' : 'Send Reset PIN'}
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Sending...
+                            </>
+                        ) : (
+                            'Send Reset PIN'
+                        )}
                     </Button>
                 </form>
             </Card>
