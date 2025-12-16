@@ -52,7 +52,7 @@ export function MarketResearch() {
                         if (data.requiresAuth) {
                             const limit = response.headers.get('X-RateLimit-Limit') || "2";
                             // Calculate reset time if needed, or just use the generic message requested
-                            throw new Error(`You've used ${limit} of ${limit} free analyses today.\nCreate a free account for unlimited analyses.\nYour limit resets in 24 hours.`)
+                            throw new Error(`You've used ${limit} of ${limit} free analyses today.\nCreate a free account to get 10 free analyses.\nYour limit resets in 24 hours.`)
                         }
                         throw new Error(data.error || "We're experiencing high traffic.")
                     } catch (e: any) {
