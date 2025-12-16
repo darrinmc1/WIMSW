@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import NextImage from "next/image"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -374,7 +375,7 @@ export function MarketResearch() {
 
                     {preview ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none">
-                            <img src={preview} alt={label} className="w-full h-full object-cover" />
+                            <NextImage src={preview} alt={label} fill className="object-cover" unoptimized />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <Upload className="text-white h-8 w-8" />
                             </div>

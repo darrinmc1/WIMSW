@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import NextImage from "next/image"
 import { toast } from "sonner"
 import { BrandName } from "@/components/brand-name"
 import { Button } from "@/components/ui/button"
@@ -343,11 +344,13 @@ export function InteractiveDemo() {
                   <div className="relative aspect-video bg-muted/50 rounded-lg border-2 border-dashed border-border hover:border-primary transition-all duration-300 group overflow-hidden">
                     {photo.image ? (
                       <>
-                        <img
+                        <NextImage
                           key={photo.image.substring(0, 50)}
                           src={photo.image}
                           alt={photo.label}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          unoptimized
                         />
                         <button
                           onClick={() => handleRemovePhoto(photo.category)}

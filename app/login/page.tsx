@@ -92,17 +92,12 @@ function LoginContent() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-medium text-gray-700">4-Digit PIN</label>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    toast.info("Please contact support at darrinmc1@yahoo.com to reset your PIN.", {
-                                        duration: 5000
-                                    })
-                                }}
+                            <Link
+                                href="/forgot-password"
                                 className="text-sm text-indigo-600 hover:text-indigo-700 focus:outline-none touch-manipulation"
                             >
                                 Forgot PIN?
-                            </button>
+                            </Link>
                         </div>
                         <div className="relative text-gray-900">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />

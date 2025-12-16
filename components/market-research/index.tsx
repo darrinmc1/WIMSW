@@ -1,2 +1,7 @@
-// Re-export the main component
-export { MarketResearchOptimized as MarketResearch } from './MarketResearchOptimized'
+// Re-export the main component from parent directory
+export { MarketResearch } from '../market-research'
+
+// Also export subcomponents for direct use
+export { ImageUploadSection } from './ImageUploadSection'
+export { ItemDetailsForm } from './ItemDetailsForm'
+export * from './types'

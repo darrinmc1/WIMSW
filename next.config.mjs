@@ -7,6 +7,8 @@ const bundleAnalyzer = withBundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable gzip compression
+  compress: true,
   images: {
     remotePatterns: [
       {

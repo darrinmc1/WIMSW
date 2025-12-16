@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +18,7 @@ interface ItemDetailsFormProps {
     analyzingImage: boolean
 }
 
-export function ItemDetailsForm({
+export const ItemDetailsForm = memo(function ItemDetailsForm({
     itemDetails,
     sizeInput,
     setSizeInput,
@@ -54,16 +55,16 @@ export function ItemDetailsForm({
         <Card className="p-6 bg-white shadow-sm">
             <div className="space-y-4">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{itemDetails.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">{itemDetails?.name}</h3>
                     <div className="flex gap-2 flex-wrap">
                         <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
-                            {itemDetails.brand}
+                            {itemDetails?.brand}
                         </Badge>
                         <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
-                            {itemDetails.category}
+                            {itemDetails?.category}
                         </Badge>
                         <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-                            {itemDetails.condition}
+                            {itemDetails?.condition}
                         </Badge>
                     </div>
                 </div>
@@ -73,14 +74,14 @@ export function ItemDetailsForm({
                         <DollarSign className="h-5 w-5 text-indigo-600" />
                         <span className="text-sm font-medium text-indigo-900">Estimated Value</span>
                     </div>
-                    <p className="text-3xl font-bold text-indigo-600">${itemDetails.estimated_price}</p>
+                    <p className="text-3xl font-bold text-indigo-600">${itemDetails?.estimated_price}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
                         <Input
-                            value={sizeInput || itemDetails.size}
+                            value={sizeInput || itemDetails?.size || ''}
                             onChange={(e) => setSizeInput(e.target.value)}
                             placeholder="e.g., M, 10, OS"
                             className="border-gray-300"
@@ -109,4 +110,4 @@ export function ItemDetailsForm({
             </div>
         </Card>
     )
-}
+})
