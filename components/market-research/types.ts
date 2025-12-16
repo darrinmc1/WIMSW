@@ -1,4 +1,3 @@
-// Shared types for market research components
 
 export interface SimilarItem {
     platform: string
@@ -41,11 +40,4 @@ export interface AnalyzedItem {
     size: string
     condition: string
     estimated_price: number
-}
-
-export interface ImagePreview {
-    front: string | null
-    back: string | null
-    label: string | null
-    damage: string | null
 }

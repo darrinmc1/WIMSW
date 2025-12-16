@@ -136,7 +136,12 @@ export function ResearchHistoryList({ history, loading, error, onRetry, limit }:
                 <div className="text-center py-12 px-4">
                     <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Research History</h3>
-                    <p className="text-gray-500 mb-4">Start researching items to see your history here</p>
+                    <p className="text-gray-500 mb-6">Start researching items to see your history here</p>
+                    <Link href="/market-research">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            Start Your First Analysis
+                        </Button>
+                    </Link>
                 </div>
             ) : (
                 <>
