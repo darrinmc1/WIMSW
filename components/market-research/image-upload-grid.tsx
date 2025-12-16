@@ -6,7 +6,7 @@ import NextImage from "next/image"
 import { toast } from "sonner"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Camera, Upload, Sparkles } from "lucide-react"
+import { Camera, Upload, Sparkles, CheckCircle } from "lucide-react"
 import { resizeImage } from "@/lib/image-utils"
 import { AnalyzedItem } from "./types"
 
@@ -113,6 +113,14 @@ export function ImageUploadGrid({
                     {preview ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none">
                             <NextImage src={preview} alt={label} fill className="object-cover" unoptimized />
+
+                            {/* Success Overlay - Animated */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 animate-in fade-in duration-300">
+                                <div className="bg-indigo-600 text-white rounded-full p-2 shadow-lg animate-in zoom-in duration-300">
+                                    <CheckCircle className="h-6 w-6" />
+                                </div>
+                            </div>
+
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <Upload className="text-white h-8 w-8" />
                             </div>
