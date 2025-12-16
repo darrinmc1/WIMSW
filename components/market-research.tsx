@@ -8,6 +8,7 @@ import { AnalyzedItem, ResearchData } from "./market-research/types"
 import { ImageUploadGrid } from "./market-research/image-upload-grid"
 import { ItemDetailsCard } from "./market-research/item-details-card"
 import { MarketResults } from "./market-research/market-results"
+import { fetchWithRetry } from "@/lib/utils"
 
 export function MarketResearch() {
     const [loading, setLoading] = useState(false)
@@ -37,7 +38,7 @@ export function MarketResearch() {
         setAnalyzingImage(true)
         setError(null)
         try {
-            const response = await fetch("/api/analyze-item", {
+            const response = await fetchWithRetry("/api/analyze-item", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ image: base64Image }),
@@ -92,7 +93,9 @@ export function MarketResearch() {
                     style: { whiteSpace: 'pre-line' } // Allow newlines
                 })
             } else {
-                toast.error(errorMsg)
+                toast.error("Analysis Failed", {
+                    description: errorMsg + " Please check your connection and try again."
+                })
             }
         } finally {
             setAnalyzingImage(false)
@@ -110,7 +113,7 @@ export function MarketResearch() {
         setError(null)
 
         try {
-            const response = await fetch("/api/market-research", {
+            const response = await fetchWithRetry("/api/market-research", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -133,7 +136,9 @@ export function MarketResearch() {
             console.error("Research Error:", err)
             const errorMsg = err.message || "Failed to research similar items."
             setError(errorMsg)
-            toast.error(errorMsg)
+            toast.error("Research Failed", {
+                description: errorMsg + " We could not complete the market scan. Please retry."
+            })
         } finally {
             setLoading(false)
         }

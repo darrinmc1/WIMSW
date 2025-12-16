@@ -126,7 +126,7 @@ export function MarketResults({
 
             <div ref={resultsRef} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Statistics Dashboard */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="p-6 border-0 shadow-md bg-white">
                         <div className="text-sm font-medium text-indigo-600 mb-1">Items Found</div>
                         <div className="text-3xl font-bold text-gray-900">{searchResults.statistics.total_found}</div>
@@ -135,13 +135,13 @@ export function MarketResults({
                         <div className="text-sm font-medium text-green-600 mb-1">Average Price</div>
                         <div className="text-3xl font-bold text-gray-900">${searchResults.statistics.average_price.toFixed(2)}</div>
                     </Card>
-                    <Card className="p-6 border-0 shadow-md bg-white">
+                    <Card className="p-6 border-0 shadow-md bg-white hidden sm:block">
                         <div className="text-sm font-medium text-blue-600 mb-1">Price Range</div>
                         <div className="text-3xl font-bold text-gray-900">
                             ${searchResults.statistics.lowest_price.toFixed(0)} - ${searchResults.statistics.highest_price.toFixed(0)}
                         </div>
                     </Card>
-                    <Card className="p-6 border-0 shadow-md bg-white">
+                    <Card className="p-6 border-0 shadow-md bg-white hidden sm:block">
                         <div className="text-sm font-medium text-purple-600 mb-1">Your Position</div>
                         <div className="text-2xl font-bold text-gray-900 truncate">
                             {searchResults.statistics.your_price_position}
@@ -156,7 +156,7 @@ export function MarketResults({
                             <Filter className="h-5 w-5" />
                             Filter by Platform
                         </div>
-                        <div className="flex flex-wrap gap-2 w-full">
+                        <div className="flex flex-nowrap sm:flex-wrap gap-2 w-full overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             <button
                                 onClick={() => setSelectedPlatform("all")}
                                 className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${selectedPlatform === "all"
@@ -182,7 +182,7 @@ export function MarketResults({
                                     <button
                                         key={platform}
                                         onClick={() => setSelectedPlatform(platform.toLowerCase())}
-                                        className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeClass}`}
+                                        className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeClass} whitespace-nowrap flex-shrink-0`}
                                     >
                                         {platform} ({count})
                                     </button>

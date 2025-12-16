@@ -1,7 +1,8 @@
 
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import NextImage from "next/image"
 import { toast } from "sonner"
 import { Card } from "@/components/ui/card"
@@ -42,15 +43,22 @@ export function ImageUploadGrid({
     ageInput,
     setAgeInput
 }: ImageUploadGridProps) {
-    const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+    const [activeSlot, setActiveSlot] = useState<'front' | 'back' | 'label' | 'damage' | null>(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const cameraInputRef = useRef<HTMLInputElement>(null)
+    const libraryInputRef = useRef<HTMLInputElement>(null)
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: 'front' | 'back' | 'label' | 'damage') => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, source: 'camera' | 'library') => {
         const file = e.target.files?.[0]
-        if (!file) return
+        if (!file || !activeSlot) return
+
+        setIsDialogOpen(false) // Close dialog immediately
 
         // File Size Validation (Max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("Image must be under 10MB")
+            toast.error("Image is too large (Maximum 10MB)", {
+                description: "Please attach a smaller version or screenshot."
+            })
             e.target.value = ''
             return
         }
@@ -69,12 +77,12 @@ export function ImageUploadGrid({
                 if (typeof reader.result === 'string') {
                     try {
                         const resizedImage = await resizeImage(reader.result, 1024, 0.8)
-                        onImageUpload(slot, resizedImage)
+                        onImageUpload(activeSlot, resizedImage)
                         toast.dismiss(toastId)
                         toast.success('Image uploaded!')
 
                         // Auto-analyze if front image
-                        if (slot === 'front') {
+                        if (activeSlot === 'front') {
                             onAnalyze(resizedImage)
                         }
                     } catch (err) {
@@ -92,24 +100,21 @@ export function ImageUploadGrid({
         e.target.value = ''
     }
 
+    const openUploadDialog = (slot: 'front' | 'back' | 'label' | 'damage') => {
+        setActiveSlot(slot)
+        setIsDialogOpen(true)
+    }
+
     const renderUploadCard = (label: string, slot: 'front' | 'back' | 'label' | 'damage') => {
         const preview = imagePreview?.[slot]
 
         return (
             <Card
                 key={slot}
-                className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
+                onClick={() => openUploadDialog(slot)}
+                className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
             >
-                <label htmlFor={`market-upload-${slot}`} className="w-full h-full flex flex-col items-center justify-center cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group">
-                    <input
-                        id={`market-upload-${slot}`}
-                        type="file"
-                        ref={(el) => { if (fileInputRefs.current) fileInputRefs.current[slot] = el }}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, slot)}
-                    />
-
+                <div className="w-full h-full min-h-[140px] flex flex-col items-center justify-center">
                     {preview ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none">
                             <NextImage src={preview} alt={label} fill className="object-cover" unoptimized />
@@ -133,15 +138,62 @@ export function ImageUploadGrid({
                             <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-700 text-center px-2">{label}</span>
                         </>
                     )}
-                </label>
+                </div>
             </Card>
         )
     }
 
     return (
         <div className={!itemDetails && !analyzingImage ? "md:col-span-3 max-w-4xl mx-auto w-full space-y-8 transition-all duration-500 ease-in-out" : "md:col-span-1 space-y-6 transition-all duration-500 ease-in-out"}>
+
+            {/* Upload Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Upload Photo</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        <Button
+                            variant="outline"
+                            className="h-32 flex flex-col gap-3 hover:bg-indigo-50 hover:border-indigo-200"
+                            onClick={() => cameraInputRef.current?.click()}
+                        >
+                            <Camera className="h-8 w-8 text-indigo-600" />
+                            <span className="font-semibold">Take Photo</span>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-32 flex flex-col gap-3 hover:bg-indigo-50 hover:border-indigo-200"
+                            onClick={() => libraryInputRef.current?.click()}
+                        >
+                            <div className="p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                            </div>
+                            <span className="font-semibold">Photo Library</span>
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Hidden Inputs for Dialog */}
+            <input
+                type="file"
+                ref={cameraInputRef}
+                className="hidden"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => handleFileSelect(e, 'camera')}
+            />
+            <input
+                type="file"
+                ref={libraryInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'library')}
+            />
+
             {/* 4-Grid Image Upload */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                 {renderUploadCard('Front View', 'front')}
                 {renderUploadCard('Back View', 'back')}
                 {renderUploadCard('Brand Label', 'label')}
