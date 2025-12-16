@@ -183,6 +183,29 @@ export function MarketResearch() {
                         </div>
                         <p className="text-lg text-gray-600 ml-16">Upload an item photo to instantly find market value</p>
                     </div>
+
+                    {/* Progress Indicator */}
+                    <div className="flex items-center gap-2 md:gap-4 bg-white/50 p-2 rounded-lg backdrop-blur-sm">
+                        {/* Step 1: Upload */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!itemDetails ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500'}`}>
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${!itemDetails ? 'bg-white text-indigo-600' : 'bg-gray-200'}`}>1</div>
+                            <span className="hidden sm:inline">Upload</span>
+                        </div>
+                        <div className="w-4 h-0.5 bg-gray-300 rounded-full" />
+
+                        {/* Step 2: Details */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${itemDetails && !searchResults ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500'}`}>
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${itemDetails && !searchResults ? 'bg-white text-indigo-600' : 'bg-gray-200'}`}>2</div>
+                            <span className="hidden sm:inline">Details</span>
+                        </div>
+                        <div className="w-4 h-0.5 bg-gray-300 rounded-full" />
+
+                        {/* Step 3: Results */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${searchResults ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500'}`}>
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${searchResults ? 'bg-white text-indigo-600' : 'bg-gray-200'}`}>3</div>
+                            <span className="hidden sm:inline">Results</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Main Input/Analysis Area */}
