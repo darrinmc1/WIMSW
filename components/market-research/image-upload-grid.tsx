@@ -126,7 +126,7 @@ export function ImageUploadGrid({
     return (
         <div className={!itemDetails && !analyzingImage ? "md:col-span-3 max-w-4xl mx-auto w-full space-y-8 transition-all duration-500 ease-in-out" : "md:col-span-1 space-y-6 transition-all duration-500 ease-in-out"}>
             {/* 4-Grid Image Upload */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {renderUploadCard('Front View', 'front')}
                 {renderUploadCard('Back View', 'back')}
                 {renderUploadCard('Brand Label', 'label')}

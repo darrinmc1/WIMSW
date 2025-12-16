@@ -50,10 +50,14 @@ export function MarketResearch() {
                         const data = JSON.parse(text);
                         // Check if user hit free limit and needs to sign up
                         if (data.requiresAuth) {
-                            throw new Error(data.error || "Free limit reached")
+                            const limit = response.headers.get('X-RateLimit-Limit') || "2";
+                            // Calculate reset time if needed, or just use the generic message requested
+                            throw new Error(`You've used ${limit} of ${limit} free analyses today.\nCreate a free account for unlimited analyses.\nYour limit resets in 24 hours.`)
                         }
                         throw new Error(data.error || "We're experiencing high traffic.")
-                    } catch (e) {
+                    } catch (e: any) {
+                        // Preserve the specific message we just threw
+                        if (e.message.includes("You've used")) throw e;
                         throw new Error("We're experiencing high traffic. Please try again.")
                     }
                 }
@@ -78,13 +82,14 @@ export function MarketResearch() {
             setError(errorMsg)
 
             // Show special toast with sign-up action if free limit reached
-            if (errorMsg.includes("Free limit reached") || errorMsg.includes("free daily limit")) {
+            if (errorMsg.includes("Free limit reached") || errorMsg.includes("free daily limit") || errorMsg.includes("You've used")) {
                 toast.error(errorMsg, {
-                    duration: 6000,
+                    duration: 8000, // Longer duration for the longer message
                     action: {
                         label: "Sign Up",
-                        onClick: () => window.location.href = "/login"
-                    }
+                        onClick: () => window.location.href = "/signup" // Corrected link to signup
+                    },
+                    style: { whiteSpace: 'pre-line' } // Allow newlines
                 })
             } else {
                 toast.error(errorMsg)
