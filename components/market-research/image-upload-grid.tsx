@@ -48,6 +48,13 @@ export function ImageUploadGrid({
         const file = e.target.files?.[0]
         if (!file) return
 
+        // File Size Validation (Max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Image must be under 10MB")
+            e.target.value = ''
+            return
+        }
+
         if (!file.type.startsWith('image/')) {
             toast.error("Please upload a valid image file (JPG, PNG)")
             e.target.value = ''
