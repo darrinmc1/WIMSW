@@ -97,6 +97,8 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^16.0.10",
     "jsdom": "^27.3.0",
     "postcss": "^8.5",
     "prisma": "^6.19.1",

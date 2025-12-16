@@ -159,7 +159,7 @@ export function MarketResults({
                         <div className="flex flex-wrap gap-2 w-full">
                             <button
                                 onClick={() => setSelectedPlatform("all")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPlatform === "all"
+                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${selectedPlatform === "all"
                                     ? "bg-gray-900 text-white"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
@@ -182,7 +182,7 @@ export function MarketResults({
                                     <button
                                         key={platform}
                                         onClick={() => setSelectedPlatform(platform.toLowerCase())}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeClass}`}
+                                        className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeClass}`}
                                     >
                                         {platform} ({count})
                                     </button>
@@ -213,7 +213,7 @@ export function MarketResults({
                                             href={getPlatformLink(item.platform_name, (item as any).search_term || item.title, item.title)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-400 hover:text-indigo-600"
+                                            className="text-gray-400 hover:text-indigo-600 p-2 -mr-2 hover:bg-gray-50 rounded-full transition-colors"
                                         >
                                             <ExternalLink className="h-4 w-4" />
                                         </a>

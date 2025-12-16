@@ -154,7 +154,7 @@ export function ImageUploadGrid({
                             value={sizeInput}
                             onChange={(e) => setSizeInput(e.target.value)}
                             placeholder="e.g. Medium, 10, 32x32"
-                            className="w-full p-2.5 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                            className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
                         />
                     </div>
                     <div>
@@ -164,7 +164,7 @@ export function ImageUploadGrid({
                             value={ageInput}
                             onChange={(e) => setAgeInput(e.target.value)}
                             placeholder="e.g. 2020, 90s Vintage"
-                            className="w-full p-2.5 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                            className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
                         />
                     </div>
                 </div>
