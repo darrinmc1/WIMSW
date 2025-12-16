@@ -23,5 +23,6 @@ export const config = {
     "/history/:path*",
     "/checkout/:path*",
     "/success/:path*",
+    "/admin/:path*", // Protect admin routes
   ],
 };
