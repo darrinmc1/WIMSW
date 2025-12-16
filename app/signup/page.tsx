@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
-import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, Loader2, Shield, CreditCard } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
 
@@ -119,6 +119,10 @@ function SignupContent() {
                     <p className="text-gray-600 mt-2">
                         {plan ? `Sign up for the ${plan} plan` : <BrandName />}
                     </p>
+                    <div className="flex items-center justify-center gap-2 mt-3 text-sm font-medium text-green-700 bg-green-50 py-1.5 px-3 rounded-full w-fit mx-auto">
+                        <CreditCard size={14} />
+                        <span>No credit card required</span>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,6 +216,17 @@ function SignupContent() {
                 <p className="text-center text-sm text-gray-500 mt-6">
                     Already have an account? <Link href="/login" className="text-indigo-600 font-semibold hover:underline">Log in</Link>
                 </p>
+
+                {/* Trust Signals */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Shield className="text-green-600 h-4 w-4" />
+                        <span>256-bit SSL Secured</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                        We respect your privacy. No spam.
+                    </div>
+                </div>
             </Card>
         </div>
     )

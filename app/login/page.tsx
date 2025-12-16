@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
-import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff, Loader2, Shield } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -141,6 +141,14 @@ function LoginContent() {
                 <p className="text-center text-sm text-gray-500 mt-6">
                     Don't have an account? <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">Sign up</Link>
                 </p>
+
+                {/* Trust Signals */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Shield className="text-green-600 h-4 w-4" />
+                        <span>256-bit SSL Secured</span>
+                    </div>
+                </div>
             </Card>
         </div>
     )
