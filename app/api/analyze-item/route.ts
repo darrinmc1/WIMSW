@@ -4,6 +4,7 @@ import { rateLimit, getClientIdentifier, analyzeItemLimiter, freeUserLimiter } f
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { AnalyzeItemResponse } from "@/lib/api-types";
 
 export async function POST(req: Request) {
     try {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
                 ? "Too many requests. Please try again later."
                 : "You've reached your free daily limit of 2 analyses. Sign up to continue analyzing items!";
 
-            return NextResponse.json(
+            return NextResponse.json<AnalyzeItemResponse>(
                 {
                     success: false,
                     error: errorMessage,
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
         // Validate request body
         const validation = validateRequest(analyzeItemSchema, body);
         if (!validation.success) {
-            return NextResponse.json(
+            return NextResponse.json<AnalyzeItemResponse>(
                 { success: false, error: validation.error },
                 { status: 400 }
             );
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
 
         if (!process.env.GEMINI_API_KEY) {
             console.error("GEMINI_API_KEY is not configured");
-            return NextResponse.json(
+            return NextResponse.json<AnalyzeItemResponse>(
                 { success: false, error: "AI service not configured. Please contact support." },
                 { status: 500 }
             );
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
         const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
         const data = JSON.parse(jsonString);
 
-        return NextResponse.json({ success: true, data });
+        return NextResponse.json<AnalyzeItemResponse>({ success: true, data });
     } catch (error: any) {
         // Generate unique error ID for tracking
         const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -143,7 +144,7 @@ export async function POST(req: Request) {
         }
 
         // Return response with user-friendly message and admin debug info in headers
-        return NextResponse.json(
+        return NextResponse.json<AnalyzeItemResponse>(
             {
                 success: false,
                 error: userMessage,

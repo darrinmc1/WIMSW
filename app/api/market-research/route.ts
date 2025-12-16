@@ -4,6 +4,7 @@ import { marketResearchSchema, validateRequest } from "@/lib/validations";
 import { rateLimit, getClientIdentifier, marketResearchLimiter } from "@/lib/rate-limit";
 import { generateCacheKey, withCache, CACHE_TTL } from "@/lib/cache";
 import { NextResponse } from "next/server";
+import { MarketResearchResponse } from "@/lib/api-types";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     const rateLimitResult = await rateLimit(identifier, marketResearchLimiter);
 
     if (!rateLimitResult.success) {
-      return NextResponse.json(
+      return NextResponse.json<MarketResearchResponse>(
         { success: false, error: "Too many requests. Please try again later." },
         {
           status: 429,
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     // Validate request body
     const validation = validateRequest(marketResearchSchema, body);
     if (!validation.success) {
-      return NextResponse.json(
+      return NextResponse.json<MarketResearchResponse>(
         { success: false, error: validation.error },
         { status: 400, headers: { 'X-Cache': 'BYPASS' } }
       );
@@ -64,8 +65,8 @@ export async function POST(req: Request) {
           category: itemDetails.category,
         });
 
-    // Step 2: Use Gemini to generate similar items based on market research
-    const prompt = `
+        // Step 2: Use Gemini to generate similar items based on market research
+        const prompt = `
       Based on real market research, generate similar marketplace listings for this item:
 
       Item Details: ${JSON.stringify(itemDetails)}
@@ -82,8 +83,8 @@ export async function POST(req: Request) {
       Preference: ${isLocalOnly ? "LOCAL PICKUP ONLY" : "GLOBAL SHIPPING"}
 
       ${isLocalOnly
-        ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms)."
-        : "PLATFORMS: eBay, Poshmark, Mercari, Depop."}
+            ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms)."
+            : "PLATFORMS: eBay, Poshmark, Mercari, Depop."}
 
       Return JSON with structure:
       {
@@ -137,7 +138,7 @@ export async function POST(req: Request) {
     // Determine if response came from cache
     const cacheStatus = shouldBustCache ? 'MISS' : 'HIT';
 
-    return NextResponse.json(
+    return NextResponse.json<MarketResearchResponse>(
       { success: true, data },
       {
         headers: {
@@ -149,7 +150,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Market Research Error:", error);
-    return NextResponse.json(
+    return NextResponse.json<MarketResearchResponse>(
       { success: false, error: error.message || "Failed to research market" },
       { status: 500, headers: { 'X-Cache': 'BYPASS' } }
     );
