@@ -10,6 +10,7 @@ import { Suspense, useState } from 'react'
 import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, Loader2, Shield, CreditCard } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
+import { PasswordStrengthMeter } from '@/components/password-strength-meter'
 
 function SignupContent() {
     const router = useRouter()
@@ -176,6 +177,7 @@ function SignupContent() {
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
+                        <PasswordStrengthMeter password={password} />
                     </div>
 
                     <div className="space-y-2">

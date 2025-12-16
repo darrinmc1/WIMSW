@@ -126,7 +126,7 @@ export function MarketResults({
 
             <div ref={resultsRef} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Statistics Dashboard */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="p-6 border-0 shadow-md bg-white">
                         <div className="text-sm font-medium text-indigo-600 mb-1">Items Found</div>
                         <div className="text-3xl font-bold text-gray-900">{searchResults.statistics.total_found}</div>

@@ -83,6 +83,83 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 /**
+ * Save password reset token
+ */
+export async function saveResetToken(email: string, token: string, expiresAt: string): Promise<boolean> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Users!A:J',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return false;
+
+    // Find user row
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[1]?.toLowerCase() === email.toLowerCase()) {
+        const rowNumber = i + 1;
+        // Update Reset Token (Col K) and Expires (Col L)
+        // Note: Google Sheets API handles expanding the range automatically if we write past current bounds
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `Users!K${rowNumber}:L${rowNumber}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[token, expiresAt]],
+          },
+        });
+        userCache = null; // Invalidate cache
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error saving reset token:', error);
+    return false;
+  }
+}
+
+/**
+ * Verify and consume reset token
+ * Returns true if valid, false otherwise
+ */
+export async function verifyResetToken(email: string, token: string): Promise<boolean> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Users!A:L', // Check up to Col L
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return false;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[1]?.toLowerCase() === email.toLowerCase()) {
+        const storedToken = row[10]; // Col K (index 10)
+        const storedExpires = row[11]; // Col L (index 11)
+
+        if (storedToken === token) {
+          // Check expiry
+          if (new Date(storedExpires) > new Date()) {
+            // Token valid. In a real app we might consume it immediately or wait for password reset.
+            // For PIN login flow, "verifying" usually means "logging in with PIN".
+            return true;
+          }
+        }
+        break;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+}
+
+/**
  * Create a new user in Google Sheets
  */
 export async function createUser(email: string, hashedPassword: string, name?: string): Promise<User | null> {
@@ -389,10 +466,10 @@ export async function initializeUsersSheet(): Promise<void> {
       // Add headers
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: 'Users!A1:G1',
+        range: 'Users!A1:L1',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [['ID', 'Email', 'Password', 'Name', 'Plan', 'Created At', 'Last Login', 'Role']],
+          values: [['ID', 'Email', 'Password', 'Name', 'Plan', 'Created At', 'Last Login', 'Role', 'Failures', 'Locked Until', 'Reset Token', 'Reset Expires']],
         },
       });
     } catch (createError) {

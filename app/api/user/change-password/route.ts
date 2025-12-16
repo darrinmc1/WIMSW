@@ -1,78 +1,60 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { getUserByEmail, updatePassword } from "@/lib/db";
-import bcrypt from "bcryptjs";
-import { analyzeItemLimiter, getClientIdentifier, rateLimit } from "@/lib/rate-limit";
-import { changePasswordSchema, validateRequest } from "@/lib/validations";
 
-export async function POST(req: Request) {
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { getUserByEmail, updatePassword } from '@/lib/google-sheets-db';
+import { compare, hash } from 'bcryptjs';
+import { rateLimit, generalLimiter } from '@/lib/rate-limit';
+
+export async function POST(request: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // Rate Limit
+        const ip = request.headers.get("x-forwarded-for") || "unknown";
+        const { success } = await rateLimit(ip, generalLimiter);
+        if (!success) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
-        // 1. Rate Limiting (Protection against brute force)
-        const identifier = getClientIdentifier(req);
-        const { success: limitSuccess, remaining, resetTime } = await rateLimit(identifier, analyzeItemLimiter);
+        const body = await request.json();
+        const { currentPassword, newPassword } = body;
 
-        if (!limitSuccess) {
-            return NextResponse.json(
-                { error: "Too many requests. Please try again later." },
-                {
-                    status: 429,
-                    headers: {
-                        "X-RateLimit-Limit": analyzeItemLimiter.limit.toString(), // Note: accessing private prop if needed, or hardcode
-                        "X-RateLimit-Remaining": remaining.toString(),
-                        "X-RateLimit-Reset": resetTime.toString(),
-                    },
-                }
-            );
+        if (!currentPassword || !newPassword) {
+            return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         }
 
-        const body = await req.json();
-
-        // 2. Input Validation (Zod)
-        const validation = validateRequest(changePasswordSchema, body);
-        if (!validation.success) {
-            return NextResponse.json({ error: validation.error }, { status: 400 });
+        if (newPassword.length < 8) {
+            return NextResponse.json({ error: 'New password too short' }, { status: 400 });
         }
 
-        const { currentPassword, newPassword } = validation.data;
-
-        // Get user to verify current password
+        // Verify current password
         const user = await getUserByEmail(session.user.email);
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const isValid = await bcrypt.compare(currentPassword, user.password);
-
+        const isValid = await compare(currentPassword, user.password);
         if (!isValid) {
-            return NextResponse.json(
-                { error: "Incorrect current password" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
         }
 
         // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await hash(newPassword, 12);
 
-        // Update password
-        const success = await updatePassword(session.user.email, hashedPassword);
-
-        if (!success) {
-            throw new Error("Failed to update password in database");
+        // Update
+        const updated = await updatePassword(session.user.email, hashedPassword);
+        if (!updated) {
+            return NextResponse.json({ error: 'Failed to update password' }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: 'Password updated successfully' });
+
     } catch (error) {
-        console.error("Password update error:", error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        console.error('Change password API error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

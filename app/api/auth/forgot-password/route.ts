@@ -1,65 +1,54 @@
+import { NextResponse } from 'next/server';
+import { sendPasswordResetEmail } from '@/lib/email';
+import { saveResetToken } from '@/lib/google-sheets-db'; // New function we need to add
+import { rateLimit, generalLimiter } from '@/lib/rate-limit';
 
-import { NextResponse } from "next/server";
-import { getUserByEmail, updatePassword } from "@/lib/google-sheets-db";
-import { sendPasswordResetEmail } from "@/lib/email";
-import bcrypt from "bcryptjs";
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
     try {
-        const { email } = await req.json();
+        const body = await request.json();
+        const { email } = body;
 
         if (!email) {
-            return NextResponse.json(
-                { success: false, error: "Email is required" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
-        // 1. Check if user exists
-        const user = await getUserByEmail(email);
-        if (!user) {
-            // Return success even if user not found to prevent email enumeration
-            return NextResponse.json({
-                success: true,
-                message: "If an account exists, a reset PIN has been sent."
-            });
+        // Rate Limiting
+        const ip = request.headers.get("x-forwarded-for") || "unknown";
+        const { success } = await rateLimit(ip, generalLimiter);
+        if (!success) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
-        // 2. Generate a random 4-digit PIN
-        const tempPin = Math.floor(1000 + Math.random() * 9000).toString();
+        // Generate 4-digit PIN
+        const resetPin = Math.floor(1000 + Math.random() * 9000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins
 
-        // 3. Hash the PIN
-        const hashedPin = await bcrypt.hash(tempPin, 10);
-
-        // 4. Update the user's password (PIN) in the database immediately
-        // Ideally we would use a separate "reset token" field, but for this PIN-based system,
-        // setting a temporary PIN is acceptable as it allows immediate login.
-        const updated = await updatePassword(email, hashedPin);
-
-        if (!updated) {
-            throw new Error("Failed to update PIN in database");
+        // TODO: Save to database/sheet
+        // For now, we'll implement a mock function or specific sheet function
+        try {
+            await saveResetToken(email, resetPin, expiresAt);
+        } catch (dbError) {
+            console.error('Failed to save reset token:', dbError);
+            // In MVP, we might fail here. 
+            // If we can't save the token, the user can't verify it.
+            return NextResponse.json({ error: 'Database error. Please try again.' }, { status: 500 });
         }
 
-        // 5. Send the email via Resend
-        const emailResult = await sendPasswordResetEmail({
-            email,
-            pin: tempPin,
-        });
+        // Send Email
+        const emailResult = await sendPasswordResetEmail(email, resetPin);
 
         if (!emailResult.success) {
-            throw new Error("Failed to send email");
+            return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            message: "If an account exists, a reset PIN has been sent."
+            message: 'Reset PIN sent',
+            // debug: resetPin // REMOVE IN PRODUCTION
         });
 
-    } catch (error: any) {
-        console.error("Forgot Password Error:", error);
-        return NextResponse.json(
-            { success: false, error: "Something went wrong. Please try again." },
-            { status: 500 }
-        );
+    } catch (error) {
+        console.error('Forgot password API error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
