@@ -171,4 +171,14 @@
   .glow-effect {
     @apply shadow-[0_0_20px_rgba(var(--primary),0.3)];
   }
+
+  /* Safe Area Support */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
+
