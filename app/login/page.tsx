@@ -94,7 +94,7 @@ function LoginContent() {
                             <label className="text-sm font-medium text-gray-700">4-Digit PIN</label>
                             <Link
                                 href="/forgot-password"
-                                className="text-sm text-indigo-600 hover:text-indigo-700 focus:outline-none touch-manipulation"
+                                className="text-sm text-indigo-600 hover:text-indigo-700 focus:outline-none touch-manipulation px-2 py-3 -mr-2"
                             >
                                 Forgot PIN?
                             </Link>
@@ -118,9 +118,10 @@ function LoginContent() {
                             <button
                                 type="button"
                                 onClick={() => setShowPin(!showPin)}
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                aria-label={showPin ? "Hide PIN" : "Show PIN"}
                             >
-                                {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                                {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
                         <p className="text-xs text-gray-500">Enter your 4-digit PIN. You have 5 attempts before lockout.</p>

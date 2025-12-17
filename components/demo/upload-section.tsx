@@ -100,9 +100,10 @@ export function UploadSection({
                                     />
                                     <button
                                         onClick={() => handleRemovePhoto(photo.category)}
-                                        className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-white rounded-full p-1.5 shadow-md transition-colors"
+                                        className="absolute top-1 right-1 h-10 w-10 flex items-center justify-center bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-white rounded-full shadow-md transition-colors"
+                                        aria-label="Remove photo"
                                     >
-                                        <X size={14} className="currentColor" />
+                                        <X size={18} className="currentColor" />
                                     </button>
                                 </>
                             ) : (
