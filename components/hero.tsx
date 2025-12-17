@@ -96,6 +96,8 @@ export function Hero() {
                   width={600}
                   height={600}
                   className="w-full h-auto transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                  sizes="(max-width: 1024px) 0px, 600px" // Don't download on mobile (0px), else 600px
+                  priority={false}
                 />
 
                 {/* Floating UI Elements Overlays */}
