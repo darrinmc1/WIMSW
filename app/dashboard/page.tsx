@@ -135,16 +135,16 @@ export default function DashboardPage() {
 
                 <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl shadow-sm grid grid-cols-3 w-full max-w-md">
-                        <TabsTrigger value="overview" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5">
-                            <User className="h-4 w-4 mr-2" />
+                        <TabsTrigger value="overview" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 min-h-[44px] py-3 sm:py-2">
+                            <User className="h-5 w-5 mr-2" />
                             Overview
                         </TabsTrigger>
-                        <TabsTrigger value="history" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5">
-                            <History className="h-4 w-4 mr-2" />
+                        <TabsTrigger value="history" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 min-h-[44px] py-3 sm:py-2">
+                            <History className="h-5 w-5 mr-2" />
                             History
                         </TabsTrigger>
-                        <TabsTrigger value="security" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5">
-                            <Key className="h-4 w-4 mr-2" />
+                        <TabsTrigger value="security" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 min-h-[44px] py-3 sm:py-2">
+                            <Key className="h-5 w-5 mr-2" />
                             Security
                         </TabsTrigger>
                     </TabsList>
