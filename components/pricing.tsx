@@ -188,8 +188,8 @@ export function Pricing() {
           {tiers.map((tier, index) => (
             <Card
               key={index}
-              className={`relative p-8 border-2 transition-all duration-300 hover:shadow-2xl flex flex-col ${tier.popular
-                ? "bg-card/50 backdrop-blur-sm border-primary shadow-xl scale-105 z-10"
+              className={`relative p-8 border-2 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${tier.popular
+                ? "bg-card/50 backdrop-blur-sm border-primary shadow-xl scale-105 z-10 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-1000"
                 : "bg-card/30 backdrop-blur-sm border-border hover:border-border/80"
                 }`}
             >
