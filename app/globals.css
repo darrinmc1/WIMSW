@@ -14,9 +14,9 @@
   --popover: oklch(0.15 0.05 260);
   --popover-foreground: oklch(0.985 0 0);
 
-  /* Electric Indigo Primary */
-  --primary: oklch(0.6 0.25 280);
-  --primary-foreground: oklch(1 0 0);
+  /* Better: Rich indigo with personality */
+  --primary: oklch(0.45 0.15 265);
+  --primary-foreground: oklch(0.99 0 0);
 
   /* Neon Cyan Secondary */
   --secondary: oklch(0.8 0.15 200);
@@ -29,8 +29,12 @@
   --accent: oklch(0.7 0.25 340);
   --accent-foreground: oklch(1 0 0);
 
+  /* Add accent for CTAs */
+  --accent-brand: oklch(0.55 0.22 330);
+  --accent-brand-foreground: oklch(0.99 0 0);
+
   --destructive: oklch(0.6 0.25 20);
-  --destructive-foreground: oklch(1 0 0);
+  --destructive-foreground: oklch(0.99 0 0);
 
   --border: oklch(0.3 0.05 260);
   --input: oklch(0.3 0.05 260);
@@ -69,8 +73,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.15 0.05 260);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6 0.25 280);
-  --primary-foreground: oklch(1 0 0);
+  --primary: oklch(0.7 0.2 265);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.8 0.15 200);
   --secondary-foreground: oklch(0.15 0.05 260);
   --muted: oklch(0.25 0.05 260);
@@ -114,6 +118,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-brand: var(--accent-brand);
+  --color-accent-brand-foreground: var(--accent-brand-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
