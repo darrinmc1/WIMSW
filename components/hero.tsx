@@ -71,9 +71,9 @@ export function Hero() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="#try-it-out">
-                <Button size="lg" className="text-base sm:text-lg px-4 sm:px-8 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white font-bold shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:shadow-[0_0_50px_rgba(168,85,247,0.8)] hover:scale-105 transition-all duration-300 border-0 animate-[pulse_2s_ease-in-out_infinite]">
+                <Button size="lg" className="group text-base sm:text-lg px-4 sm:px-8 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white font-bold shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:shadow-[0_0_50px_rgba(168,85,247,0.8)] hover:scale-105 transition-all duration-300 border-0">
                   Start Selling Smarter
-                  <ArrowRight className="ml-2 animate-bounce" size={20} />
+                  <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
                 </Button>
               </Link>
               <Link href="#how-it-works">
