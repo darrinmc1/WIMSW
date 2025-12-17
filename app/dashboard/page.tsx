@@ -14,6 +14,7 @@ import { BrandName } from "@/components/brand-name"
 import { ResearchHistoryList } from "@/components/research-history-list"
 import { toast } from "sonner"
 import { PasswordStrengthMeter } from "@/components/password-strength-meter"
+import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
@@ -107,11 +108,7 @@ export default function DashboardPage() {
     }
 
     if (status === "loading") {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        )
+        return <DashboardSkeleton />
     }
 
     if (!session) {
