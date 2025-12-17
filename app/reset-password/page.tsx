@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -23,7 +24,6 @@ function ResetPasswordContent() {
     const [pin, setPin] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleVerify = async (e: React.FormEvent) => {
@@ -161,10 +161,9 @@ function ResetPasswordContent() {
                     <form onSubmit={handleReset} className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">New Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <Input
-                                    type={showPassword ? "text" : "password"}
+                            <div className="relative text-gray-900">
+                                <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                                <PasswordInput
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
@@ -172,22 +171,14 @@ function ResetPasswordContent() {
                                     placeholder="••••••••"
                                     minLength={8}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-3 text-gray-400"
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
                             </div>
                             <PasswordStrengthMeter password={newPassword} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Confirm Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <Input
-                                    type={showPassword ? "text" : "password"}
+                            <div className="relative text-gray-900">
+                                <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                                <PasswordInput
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     required

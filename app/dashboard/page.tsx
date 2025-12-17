@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, User, History, Key, LogOut, Eye, EyeOff } from "lucide-react"
 import { signOut } from "next-auth/react"
@@ -24,8 +25,6 @@ export default function DashboardPage() {
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-    const [showNewPassword, setShowNewPassword] = useState(false)
 
     // History & Stats State
     const [history, setHistory] = useState([])
@@ -212,39 +211,30 @@ export default function DashboardPage() {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-400">Current Password</label>
                                     <div className="relative">
-                                        <Input
-                                            type={showCurrentPassword ? "text" : "password"}
+                                        <PasswordInput
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
                                             required
-                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500 pr-10"
+                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500"
                                         />
-                                        <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-2.5 text-gray-400 hover:text-white">
-                                            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-400">New Password</label>
                                     <div className="relative">
-                                        <Input
-                                            type={showNewPassword ? "text" : "password"}
+                                        <PasswordInput
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             required
                                             minLength={8}
-                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500 pr-10"
+                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500"
                                         />
-                                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-2.5 text-gray-400 hover:text-white">
-                                            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
                                     </div>
                                     <PasswordStrengthMeter password={newPassword} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-400">Confirm New Password</label>
-                                    <Input
-                                        type={showNewPassword ? "text" : "password"}
+                                    <PasswordInput
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         required

@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
@@ -17,7 +18,6 @@ function LoginContent() {
 
     const [email, setEmail] = useState('')
     const [pin, setPin] = useState('')
-    const [showPin, setShowPin] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -100,14 +100,13 @@ function LoginContent() {
                             </Link>
                         </div>
                         <div className="relative text-gray-900">
-                            <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                            <Input
-                                type={showPin ? "text" : "password"}
+                            <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                            <PasswordInput
                                 inputMode="numeric"
                                 pattern="[0-9]*"
                                 maxLength={4}
                                 placeholder="••••"
-                                className="pl-10 pr-10 bg-white !text-gray-900 text-center text-2xl tracking-widest"
+                                className="pl-10 !text-gray-900 text-center text-2xl tracking-widest bg-white"
                                 value={pin}
                                 onChange={(e) => {
                                     const value = e.target.value.replace(/\D/g, '').slice(0, 4)
@@ -115,14 +114,6 @@ function LoginContent() {
                                 }}
                                 required
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowPin(!showPin)}
-                                className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                                aria-label={showPin ? "Hide PIN" : "Show PIN"}
-                            >
-                                {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
                         </div>
                         <p className="text-xs text-gray-500">Enter your 4-digit PIN. You have 5 attempts before lockout.</p>
                     </div>
@@ -151,7 +142,7 @@ function LoginContent() {
                     </div>
                 </div>
             </Card>
-        </div>
+        </div >
     )
 }
 

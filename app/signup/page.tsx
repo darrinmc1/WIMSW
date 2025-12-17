@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { BrandName } from '@/components/brand-name'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Suspense, useState } from 'react'
@@ -22,8 +23,6 @@ function SignupContent() {
     const [email, setEmail] = useState(emailParam || '')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -161,23 +160,15 @@ function SignupContent() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Password (min 8 characters)</label>
                         <div className="relative text-gray-900">
-                            <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                            <Input
-                                type={showPassword ? "text" : "password"}
+                            <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                            <PasswordInput
                                 placeholder="••••••••"
-                                className="pl-10 pr-10 bg-white !text-gray-900"
+                                className="pl-10 !text-gray-900 bg-white"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 minLength={8}
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                            >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
                         </div>
                         <PasswordStrengthMeter password={password} />
                     </div>
@@ -185,23 +176,15 @@ function SignupContent() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Confirm Password</label>
                         <div className="relative text-gray-900">
-                            <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                            <Input
-                                type={showConfirmPassword ? "text" : "password"}
+                            <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                            <PasswordInput
                                 placeholder="••••••••"
-                                className="pl-10 pr-10 bg-white !text-gray-900"
+                                className="pl-10 !text-gray-900 bg-white"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
                                 minLength={8}
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                            >
-                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
                         </div>
                     </div>
 
