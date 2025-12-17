@@ -50,7 +50,7 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
-                  className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-balance"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] sm:leading-tight text-balance"
                 >
                   {headings[index].split(' ').map((word, i) => {
                     const isHighlighted = ["Cash", "AI", "Value", "Profit", "Smarter"].some(k => word.includes(k))
