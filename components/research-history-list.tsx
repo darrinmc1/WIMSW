@@ -12,7 +12,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Calendar, AlertCircle, RefreshCw } from "lucide-react"
+import { Calendar, AlertCircle, RefreshCw, Search, TrendingUp } from "lucide-react"
+import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty"
 import Link from "next/link"
 
 export interface ResearchRecord {
@@ -133,16 +134,24 @@ export function ResearchHistoryList({ history, loading, error, onRetry, limit }:
                     </Button>
                 </div>
             ) : displayHistory.length === 0 ? (
-                <div className="text-center py-12 px-4">
-                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Research History</h3>
-                    <p className="text-gray-500 mb-6">Start researching items to see your history here</p>
-                    <Link href="/market-research">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700">
-                            Start Your First Analysis
-                        </Button>
-                    </Link>
-                </div>
+
+                <Empty className="border-none bg-transparent py-14">
+                    <EmptyMedia variant="icon" className="bg-indigo-50 text-indigo-600 size-14 mx-auto mb-6">
+                        <Search className="size-7" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-xl font-bold text-gray-900 mb-2">No research history yet</EmptyTitle>
+                    <EmptyDescription className="text-base text-gray-500 max-w-sm mx-auto mb-8">
+                        Start analyzing items to see your market research details and price history here.
+                    </EmptyDescription>
+                    <EmptyContent>
+                        <Link href="/market-research">
+                            <Button className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 font-semibold gap-2 shadow-md hover:shadow-lg transition-all rounded-xl">
+                                <TrendingUp className="size-4" />
+                                Analyze Your First Item
+                            </Button>
+                        </Link>
+                    </EmptyContent>
+                </Empty>
             ) : (
                 <>
                     {/* Desktop/Tablet View: Table */}
