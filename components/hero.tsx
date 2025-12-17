@@ -84,6 +84,21 @@ export function Hero() {
             </div>
 
             {/* Stats block removed as requested */}
+            {/* Add mobile hero image */}
+            <div className="relative lg:hidden mt-8 group">
+              <div className="relative glass-panel rounded-2xl p-2">
+                <div className="relative rounded-xl overflow-hidden shadow-xl aspect-square">
+                  <Image
+                    src="/person-taking-photo-of-clothing-with-phone-for-res.jpg"
+                    alt="WIMSW"
+                    width={400}
+                    height={400}
+                    className="w-full h-auto"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="relative group lg:block hidden">
