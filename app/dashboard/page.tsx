@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, User, History, Key, LogOut, Eye, EyeOff } from "lucide-react"
+import { Loader2, User, History, Key, LogOut, Eye, EyeOff, Award } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { BrandName } from "@/components/brand-name"
 import { ResearchHistoryList } from "@/components/research-history-list"
@@ -185,6 +185,15 @@ export default function DashboardPage() {
                                         <div className="text-xs text-gray-500 mt-1">Potential Value</div>
                                     </div>
                                 </div>
+                                {stats.totalItems >= 10 && (
+                                    <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg flex items-center gap-3 animate-in slide-in-from-bottom-2">
+                                        <Award className="h-6 w-6 text-yellow-600" />
+                                        <div>
+                                            <div className="font-semibold text-yellow-900 text-sm">Power Seller!</div>
+                                            <div className="text-xs text-yellow-700">You've analyzed 10+ items</div>
+                                        </div>
+                                    </div>
+                                )}
                             </Card>
                         </div>
                     </TabsContent>
