@@ -183,7 +183,7 @@
   }
 
   .glow-effect {
-    @apply shadow-[0_0_20px_rgba(var(--primary), 0.3)];
+    box-shadow: 0 0 20px color-mix(in oklch, var(--primary), transparent 70%);
   }
 
   /* Safe Area Support */
