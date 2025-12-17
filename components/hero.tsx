@@ -35,8 +35,8 @@ export function Hero() {
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 backdrop-blur-md text-primary-foreground text-sm font-medium shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] transition-all duration-300 animate-[pulse_3s_ease-in-out_infinite]">
-              <Sparkles size={16} className="text-yellow-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 backdrop-blur-md text-primary-foreground text-sm font-medium shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:shadow-[0_0_40px_rgba(168,85,247,0.7)] transition-all duration-300">
+              <Sparkles size={16} className="text-yellow-400" />
               <span className="text-white font-bold bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">
                 New: AI-Powered Price Discovery
               </span>
