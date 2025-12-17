@@ -25,7 +25,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="relative pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-950 via-purple-900/50 to-background" />
       <div className="absolute top-0 right-0 -z-10 w-[800px] h-[800px] bg-gradient-to-l from-purple-600/30 to-pink-600/20 rounded-full blur-[120px] opacity-40 animate-pulse" />
