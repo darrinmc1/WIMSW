@@ -23,7 +23,6 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none z-10 touch-manipulation"
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                    tabIndex={-1}
                 >
                     {showPassword ? (
                         <EyeOff className="h-5 w-5" aria-hidden="true" />

@@ -112,7 +112,16 @@ export function ImageUploadGrid({
             <Card
                 key={slot}
                 onClick={() => openUploadDialog(slot)}
-                className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Upload ${label}`}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        openUploadDialog(slot)
+                    }
+                }}
+                className={`relative aspect-square border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all hover:border-indigo-500 hover:bg-indigo-50 group ${preview ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'} focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 outline-none`}
             >
                 <div className="w-full h-full min-h-[140px] flex flex-col items-center justify-center">
                     {preview ? (
