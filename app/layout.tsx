@@ -7,8 +7,8 @@ import { Toaster } from "sonner"
 import { Providers } from "@/components/providers"
 import "./globals.css"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" })
 
 export const metadata: Metadata = {
   title: "WIMSW.com - What Is My Stuff Worth?",

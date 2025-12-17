@@ -52,7 +52,13 @@ const nextConfig = {
   // Experimental features for better performance
   experimental: {
     // Optimize package imports for commonly used libraries
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'recharts',
+      'date-fns',
+      'framer-motion',
+    ],
   },
   // Bundle analyzer (run with ANALYZE=true npm run build)
   webpack: (config, { isServer }) => {
