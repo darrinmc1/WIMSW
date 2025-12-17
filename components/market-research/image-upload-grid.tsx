@@ -126,7 +126,16 @@ export function ImageUploadGrid({
                 <div className="w-full h-full min-h-[140px] flex flex-col items-center justify-center">
                     {preview ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none">
-                            <NextImage src={preview} alt={label} fill className="object-cover" unoptimized />
+                            <NextImage
+                                src={preview}
+                                alt={label}
+                                fill
+                                className="object-cover transition-opacity duration-300 opacity-0"
+                                unoptimized
+                                onLoad={(e) => e.currentTarget.classList.replace('opacity-0', 'opacity-100')}
+                            />
+                            {/* Loading skeleton underneath */}
+                            <div className="absolute inset-0 bg-gray-200 animate-pulse -z-10" />
 
                             {/* Success Overlay - Animated */}
                             <div className="absolute inset-0 flex items-center justify-center bg-black/20 animate-in fade-in duration-300">
