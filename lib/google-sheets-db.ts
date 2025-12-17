@@ -476,4 +476,119 @@ export async function initializeUsersSheet(): Promise<void> {
       console.error('Error initializing Users sheet:', createError);
     }
   }
+
+  // Initialize ResearchHistory sheet
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'ResearchHistory!A1:K1',
+    });
+    if (!response.data.values || response.data.values.length === 0) {
+      throw new Error('No headers');
+    }
+  } catch (e) {
+    try {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [{ addSheet: { properties: { title: 'ResearchHistory' } } }]
+        }
+      });
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: 'ResearchHistory!A1:K1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [['ID', 'UserID', 'ItemName', 'Brand', 'Category', 'Condition', 'Size', 'EstimatedPrice', 'Results', 'IsLocalOnly', 'CreatedAt']]
+        }
+      });
+    } catch (err) {
+      // Ignore if already exists
+    }
+  }
+}
+
+/**
+ * Save research history to Google Sheets
+ */
+export async function saveResearchHistory(
+  userId: string,
+  itemDetails: {
+    name: string;
+    brand: string;
+    category: string;
+    condition: string;
+    size?: string;
+    estimatedPrice: number;
+  },
+  results: any,
+  isLocalOnly: boolean = false
+): Promise<void> {
+  try {
+    const id = `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const createdAt = new Date().toISOString();
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'ResearchHistory!A:K',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[
+          id,
+          userId,
+          itemDetails.name,
+          itemDetails.brand,
+          itemDetails.category,
+          itemDetails.condition,
+          itemDetails.size || '',
+          itemDetails.estimatedPrice.toString(),
+          JSON.stringify(results),
+          isLocalOnly.toString(),
+          createdAt
+        ]]
+      }
+    });
+  } catch (error) {
+    console.error('Error saving research history to Sheets:', error);
+  }
+}
+
+/**
+ * Get research history from Google Sheets
+ */
+export async function getResearchHistory(userId: string, limit: number = 50): Promise<any[]> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'ResearchHistory!A:K',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return [];
+
+    // Filter by userId and sort desc by CreatedAt
+    // Map rows to objects
+    const history = rows.slice(1)
+      .map(row => ({
+        id: row[0],
+        userId: row[1],
+        itemName: row[2],
+        itemBrand: row[3],
+        itemCategory: row[4],
+        condition: row[5],
+        size: row[6],
+        estimatedPrice: parseFloat(row[7]),
+        results: JSON.parse(row[8] || '{}'),
+        isLocalOnly: row[9] === 'true',
+        createdAt: row[10]
+      }))
+      .filter(item => item.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+
+    return history;
+  } catch (error) {
+    console.error('Error getting research history from Sheets:', error);
+    return [];
+  }
 }

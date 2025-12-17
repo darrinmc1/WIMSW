@@ -183,8 +183,8 @@ export async function saveResearchHistory(
     }
   }
 
-  // Note: Google Sheets version would need to be implemented if needed
-  // For now, Postgres-only feature
+  // Fallback to Google Sheets
+  await sheetsDb.saveResearchHistory(userId, itemDetails, results, isLocalOnly);
 }
 
 /**
@@ -199,8 +199,8 @@ export async function getResearchHistory(userId: string, limit: number = 50) {
     });
   }
 
-  // Note: Google Sheets version would return empty array
-  return [];
+  // Fallback to Google Sheets
+  return await sheetsDb.getResearchHistory(userId, limit);
 }
 
 /**

@@ -4,7 +4,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Check, Copy, TrendingUp, DollarSign, Settings, Info, ExternalLink } from "lucide-react"
+import { Check, Copy, TrendingUp, DollarSign, Settings, Info, ExternalLink, Sparkles } from "lucide-react"
 import { AnalysisData } from "./types"
 
 interface AnalysisResultsProps {
@@ -56,6 +56,19 @@ export function AnalysisResults({ isAnalyzed, analysis }: AnalysisResultsProps) 
                     </div>
                 </Card>
             </div>
+
+            {/* AI Description */}
+            {analysis.description && (
+                <Card className="p-4 bg-card border-indigo-500/20 bg-gradient-to-br from-indigo-500/5 to-transparent">
+                    <h3 className="text-sm font-semibold text-indigo-400 mb-1 flex items-center gap-2">
+                        <Sparkles size={16} className="text-indigo-500" />
+                        AI Analysis
+                    </h3>
+                    <p className="text-sm text-foreground/90 leading-relaxed italic">
+                        "{analysis.description}"
+                    </p>
+                </Card>
+            )}
 
             {/* Market Analysis Table */}
             <Card className="overflow-hidden border-border bg-card">

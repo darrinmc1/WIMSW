@@ -78,7 +78,8 @@ export async function POST(req: Request) {
         "category": "Category (e.g. Clothing, Electronics)",
         "size": "Size if applicable (or 'N/A')",
         "condition": "Estimated condition (e.g. Good, New)",
-        "estimated_price": number (conservative estimate in USD)
+        "estimated_price": number (conservative estimate in USD),
+        "description": "MANDATORY: Write a 2-3 sentence detailed description of the item visual features, brand, material, and condition."
       }
       Do not include markdown formatting (like \`\`\`json). Just return the raw JSON string.
     `;

@@ -86,6 +86,7 @@ export interface AnalysisData {
     suggestedPrice: string
     recommendation: AnalysisRecommendation
     platforms: PlatformConfig[]
+    description?: string // AI generated description
 }
 
 // API Response Types

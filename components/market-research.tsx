@@ -75,6 +75,10 @@ export function MarketResearch() {
 
             if (data.success) {
                 setItemDetails(data.data)
+                // Set description from AI or fallback to constructed string
+                const aiDesc = data.data.description ||
+                    `${data.data.condition} ${data.data.brand || 'Unbranded'} ${data.data.name}. Category: ${data.data.category}.`;
+                setDescription(aiDesc);
                 toast.success("Item identified successfully!")
             }
         } catch (err: any) {

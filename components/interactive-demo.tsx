@@ -25,6 +25,7 @@ export function InteractiveDemo() {
     item: "",
     condition: "",
     suggestedPrice: "",
+    description: "",
     recommendation: {
       platform: "",
       reason: ""
@@ -138,12 +139,27 @@ export function InteractiveDemo() {
         const { brand, name, estimated_price } = data.data
         const searchTerm = encodeURIComponent(`${brand} ${name}`)
 
+        // Simple recommendation logic
+        let bestPlatform = "eBay"
+        if (data.data.category?.toLowerCase().includes("clothing") || data.data.category?.toLowerCase().includes("shoes")) {
+          if (["gucci", "lv", "louis vuitton", "prada", "chanel"].some(b => brand?.toLowerCase().includes(b))) {
+            bestPlatform = "Poshmark"
+          } else if (["vintage", "y2k", "streetwear", "90s"].some(k => data.data.description?.toLowerCase().includes(k) || name?.toLowerCase().includes(k))) {
+            bestPlatform = "Depop"
+          }
+        }
+
         // Update analysis with real data
         setAnalysis(prev => ({
           ...prev,
           brand: brand,
           item: name,
           suggestedPrice: `$${estimated_price}`,
+          description: data.data.description || `${data.data.condition} ${brand} ${name}`,
+          recommendation: {
+            platform: bestPlatform,
+            reason: "Based on brand and category match"
+          },
           platforms: prev.platforms.map(p => {
             // Create real search URL
             let realUrl = ""
