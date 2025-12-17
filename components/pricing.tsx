@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Check, Shield, Zap, RefreshCw, Lock, DollarSign, Users, Award, ShoppingCart, Loader2 } from "lucide-react"
 import { TrialBanner } from "@/components/trial-banner"
+import { MobileStickyAction } from "@/components/mobile-sticky-action"
 import dynamic from "next/dynamic"
 
 // Lazy load modal - only loads when user clicks "Contact Sales"
@@ -225,8 +226,8 @@ export function Pricing() {
                   <Button
                     onClick={() => handleTierSelection(tier.id)}
                     className={`w-full font-bold h-12 text-lg ${tier.popular
-                        ? "bg-indigo-600 hover:bg-indigo-700 text-white glow-effect"
-                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white glow-effect"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
                       }`}
                     size="lg"
                   >
@@ -342,6 +343,10 @@ export function Pricing() {
             <div className="font-semibold text-sm">90%+ margins</div>
           </div>
         </div>
+        <MobileStickyAction
+          text="Start 10-Day Free Trial"
+          onClick={() => window.location.href = "/signup?plan=pro"}
+        />
       </div>
     </section>
   )

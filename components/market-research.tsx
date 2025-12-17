@@ -8,6 +8,7 @@ import { AnalyzedItem, ResearchData } from "./market-research/types"
 import { ImageUploadGrid } from "./market-research/image-upload-grid"
 import { ItemDetailsCard } from "./market-research/item-details-card"
 import { MarketResults } from "./market-research/market-results"
+import { MobileStickyAction } from "@/components/mobile-sticky-action"
 import { fetchWithRetry } from "@/lib/utils"
 
 export function MarketResearch() {
@@ -262,6 +263,45 @@ export function MarketResearch() {
                     saving={saving}
                     onSave={handleSave}
                 />
+
+                {/* Mobile Sticky Actions */}
+                {!itemDetails && imagePreview?.front && !analyzingImage && (
+                    <MobileStickyAction
+                        text="✨ Identify Item"
+                        onClick={() => analyzeImage(imagePreview.front!)}
+                    />
+                )}
+
+                {analyzingImage && (
+                    <MobileStickyAction
+                        text="Identifying..."
+                        onClick={() => { }}
+                        loading={true}
+                    />
+                )}
+
+                {itemDetails && !searchResults && !loading && (
+                    <MobileStickyAction
+                        onClick={handleResearch}
+                        text="🚀 Analyze Market Value"
+                    />
+                )}
+
+                {loading && (
+                    <MobileStickyAction
+                        text="Searching Market..."
+                        onClick={() => { }}
+                        loading={true}
+                    />
+                )}
+
+                {searchResults && !saving && (
+                    <MobileStickyAction
+                        text="💾 Save Research"
+                        onClick={handleSave}
+                        variant="outline"
+                    />
+                )}
             </div>
         </div>
     )
