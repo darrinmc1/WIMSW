@@ -107,8 +107,8 @@ export function MarketResearch() {
         }
     }
 
-    const handleResearch = async () => {
-        console.log('[Market Research] handleResearch called', { itemDetails })
+    const handleResearch = async (forceFresh = false) => {
+        console.log('[Market Research] handleResearch called', { itemDetails, forceFresh })
         if (!itemDetails) {
             toast.error("Please upload and analyze an item first")
             return
@@ -126,7 +126,8 @@ export function MarketResearch() {
                     description,
                     sizeInput,
                     ageInput,
-                    isLocalOnly
+                    isLocalOnly,
+                    bustCache: true // Always get fresh results to ensure Facebook Marketplace appears
                 }),
             })
 
