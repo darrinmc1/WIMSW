@@ -48,7 +48,12 @@ export function MarketResults({
     if (!searchResults) return null;
 
     const filteredItems = (searchResults.similar_items.filter(
-        (item) => selectedPlatform === "all" || item.platform.toLowerCase() === selectedPlatform.toLowerCase()
+        (item) => {
+            if (selectedPlatform === "all") return true;
+            const p = item.platform.toLowerCase();
+            const s = selectedPlatform.toLowerCase();
+            return p === s || (s === 'facebook' && p.includes('facebook'));
+        }
     ) || []).filter((item, index, self) =>
         // Deduplicate based on title and price
         index === self.findIndex((t) => (
@@ -167,7 +172,11 @@ export function MarketResults({
                                 All Platforms ({searchResults.similar_items.length})
                             </button>
                             {["eBay", "Poshmark", "Depop", "Mercari", "Facebook"].map(platform => {
-                                const count = searchResults.similar_items.filter(i => i.platform.toLowerCase() === platform.toLowerCase()).length
+                                const count = searchResults.similar_items.filter(i => {
+                                    const p = i.platform.toLowerCase();
+                                    const f = platform.toLowerCase();
+                                    return p === f || (f === 'facebook' && p.includes('facebook'));
+                                }).length
                                 const isActive = selectedPlatform.toLowerCase() === platform.toLowerCase()
                                 if (count === 0 && !isActive) return null
 

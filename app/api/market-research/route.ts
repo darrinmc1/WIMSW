@@ -83,15 +83,17 @@ export async function POST(req: Request) {
       Preference: ${isLocalOnly ? "LOCAL PICKUP ONLY" : "GLOBAL SHIPPING"}
 
       ${isLocalOnly
-            ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms)."
-            : "PLATFORMS: eBay, Poshmark, Mercari, Depop, Facebook Marketplace."}
+            ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms). Generate at least 1-2 items for EACH platform."
+            : "PLATFORMS: eBay, Poshmark, Mercari, Depop, Facebook Marketplace. Generate at least 1-2 items for EACH platform including Facebook Marketplace."}
+
+      CRITICAL: Ensure you include listings for ALL platforms listed above. Facebook Marketplace is required.
 
       Return JSON with structure:
       {
         "similar_items": [
           {
-            "platform": "string",
-            "platform_name": "string",
+            "platform": "string (lowercase: ebay, poshmark, mercari, depop, facebook)",
+            "platform_name": "string (exact: eBay, Poshmark, Mercari, Depop, Facebook Marketplace)",
             "title": "string",
             "price": number (use market research pricing as guide),
             "condition": "string",
