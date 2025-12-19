@@ -61,7 +61,7 @@ export function Navigation() {
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
                 <Link href="/dashboard">
-                  <Button variant="ghost" className="text-foreground hover:bg-slate-100 flex items-center gap-2">
+                  <Button variant="ghost" className="text-foreground hover:bg-primary/10 hover:text-primary flex items-center gap-2 transition-colors">
                     <User className="w-4 h-4" />
                     Dashboard
                   </Button>
