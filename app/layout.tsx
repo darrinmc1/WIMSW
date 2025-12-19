@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", disp
 export const metadata: Metadata = {
   title: "WIMSW.com - What Is My Stuff Worth?",
   description:
-    "Instant AI-powered market research and pricing for your secondhand items. Find out what your stuff is worth on eBay, Poshmark, and more.",
+    "Instant AI-powered market research and pricing for your secondhand items. Find out what your stuff is worth on eBay, Poshmark, Facebook Marketplace, and more.",
   generator: "WIMSW",
-  keywords: ["resale", "AI pricing", "clothing resale", "eBay", "Poshmark", "Depop", "secondhand", "value check"],
+  keywords: ["resale", "AI pricing", "clothing resale", "eBay", "Poshmark", "Depop", "Facebook Marketplace", "Mercari", "secondhand", "value check"],
 }
 
 export const viewport = {

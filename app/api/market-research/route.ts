@@ -84,7 +84,7 @@ export async function POST(req: Request) {
 
       ${isLocalOnly
             ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms)."
-            : "PLATFORMS: eBay, Poshmark, Mercari, Depop."}
+            : "PLATFORMS: eBay, Poshmark, Mercari, Depop, Facebook Marketplace."}
 
       Return JSON with structure:
       {
