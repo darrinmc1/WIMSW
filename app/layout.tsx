@@ -18,6 +18,14 @@ export const metadata: Metadata = {
   keywords: ["resale", "AI pricing", "clothing resale", "eBay", "Poshmark", "Depop", "secondhand", "value check"],
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover' // Critical for safe area insets
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
