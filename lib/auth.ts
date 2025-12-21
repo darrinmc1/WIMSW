@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { getUserByEmail, updateLastLogin, incrementFailedAttempts, resetFailedAttempts, isUserLocked } from "./google-sheets-db";
+import { getUserByEmail, updateLastLogin, incrementFailedAttempts, resetFailedAttempts, isUserLocked } from "./db";
 import { APP_CONFIG } from "./config";
 
 // Don't import env here to avoid circular dependency issues
@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and PIN required");
         }
 
-        // Get user from Google Sheets
+        // Get user from database (Postgres or Google Sheets fallback)
         const user = await getUserByEmail(credentials.email);
 
         if (!user) {

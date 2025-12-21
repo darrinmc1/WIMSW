@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getUserByEmail, updatePassword } from '@/lib/google-sheets-db';
+import { getUserByEmail, updatePassword } from '@/lib/db';
 import { compare, hash } from 'bcryptjs';
 import { rateLimit, generalLimiter } from '@/lib/rate-limit';
 

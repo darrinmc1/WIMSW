@@ -116,6 +116,40 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=self; microphone=()', // Camera needed for upload
           },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              // Default: only allow from same origin
+              "default-src 'self'",
+              // Scripts: Next.js requires 'unsafe-eval' and 'unsafe-inline' in dev mode
+              // In production, Next.js uses hashed scripts
+              process.env.NODE_ENV === 'production'
+                ? "script-src 'self' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com"
+                : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
+              // Styles: Tailwind and Radix UI use inline styles, Framer Motion needs inline
+              "style-src 'self' 'unsafe-inline'",
+              // Images: allow data URIs for user uploads + e-commerce CDNs
+              "img-src 'self' data: blob: https://*.ebay.com https://*.poshmark.com https://*.mercari.com https://*.depop.com https://*.facebook.com https://*.offerup.com https://*.craigslist.org https://*.gumtree.com https://images.unsplash.com https://cdn.shopify.com https://*.cloudinary.com https://vercel.live",
+              // Fonts: only from same origin
+              "font-src 'self' data:",
+              // Connect: API calls + Vercel Analytics + Sentry
+              "connect-src 'self' https://vercel.live https://va.vercel-scripts.com https://*.sentry.io https://o4508204448866304.ingest.us.sentry.io",
+              // Media: allow from same sources as images
+              "media-src 'self' data: blob:",
+              // Objects/embeds: disallow plugins
+              "object-src 'none'",
+              // Base URI: restrict to same origin
+              "base-uri 'self'",
+              // Form actions: only submit to same origin
+              "form-action 'self'",
+              // Frame ancestors: already set via X-Frame-Options but add here too
+              "frame-ancestors 'none'",
+              // Upgrade insecure requests in production
+              process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests' : '',
+            ]
+              .filter(Boolean)
+              .join('; '),
+          },
         ],
       },
     ];

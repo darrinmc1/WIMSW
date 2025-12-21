@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyResetToken, updatePassword, saveResetToken } from '@/lib/google-sheets-db';
+import { verifyResetToken, updatePassword } from '@/lib/db';
 import { hash } from 'bcryptjs';
 
 export async function POST(request: Request) {

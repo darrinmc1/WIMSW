@@ -3,13 +3,35 @@ import { performMarketResearch } from "@/lib/perplexity";
 import { marketResearchSchema, validateRequest } from "@/lib/validations";
 import { rateLimit, getClientIdentifier, marketResearchLimiter } from "@/lib/rate-limit";
 import { generateCacheKey, withCache, CACHE_TTL } from "@/lib/cache";
+import { sanitizePromptInput, checkInputRelevance } from "@/lib/utils";
+import { trackStrike, isBlocked, getStrikeCount, getStrikeTimeRemaining } from "@/lib/strike-tracker";
 import { NextResponse } from "next/server";
 import { MarketResearchResponse } from "@/lib/api-types";
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: 10 requests per minute
+    // Get client identifier for rate limiting and strike tracking
     const identifier = getClientIdentifier(req);
+
+    // Check if user is blocked due to excessive invalid inputs
+    const blocked = await isBlocked(identifier);
+    if (blocked) {
+      const timeRemaining = await getStrikeTimeRemaining(identifier);
+      const minutesRemaining = Math.ceil(timeRemaining / 60);
+
+      return NextResponse.json<MarketResearchResponse>(
+        {
+          success: false,
+          error: `Too many invalid submissions. Please try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`
+        },
+        {
+          status: 429,
+          headers: { 'X-Cache': 'BYPASS', 'X-Strike-Blocked': 'true' }
+        }
+      );
+    }
+
+    // Rate limiting: 10 requests per minute
     const rateLimitResult = await rateLimit(identifier, marketResearchLimiter);
 
     if (!rateLimitResult.success) {
@@ -40,6 +62,43 @@ export async function POST(req: Request) {
 
     const { description, isLocalOnly, sizeInput, ageInput, bustCache, ...itemDetails } = validation.data;
 
+    // Check relevance of required fields
+    const relevanceChecks = [
+      { field: itemDetails.name, name: 'Item name' },
+      { field: itemDetails.brand, name: 'Brand' },
+      { field: itemDetails.category, name: 'Category' },
+      { field: description, name: 'Description' },
+    ];
+
+    for (const check of relevanceChecks) {
+      if (!check.field) continue; // Skip optional empty fields
+
+      const relevanceResult = checkInputRelevance(check.field, check.name);
+      if (!relevanceResult.isRelevant) {
+        // Track strike for invalid input
+        const strikes = await trackStrike(identifier);
+        const remainingAttempts = 3 - strikes;
+
+        let errorMessage = relevanceResult.reason || 'Invalid input detected.';
+
+        if (strikes < 3) {
+          errorMessage += ` You have ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before being temporarily blocked.`;
+        }
+
+        return NextResponse.json<MarketResearchResponse>(
+          { success: false, error: errorMessage },
+          {
+            status: 400,
+            headers: {
+              'X-Cache': 'BYPASS',
+              'X-Strike-Count': String(strikes),
+              'X-Strikes-Remaining': String(remainingAttempts),
+            }
+          }
+        );
+      }
+    }
+
     // Generate cache key based on item details
     const cacheKey = generateCacheKey('market-research', {
       name: itemDetails.name,
@@ -66,14 +125,25 @@ export async function POST(req: Request) {
         });
 
         // Step 2: Use Gemini to generate similar items based on market research
+        // Sanitize all user-provided inputs to prevent prompt injection
+        const sanitizedItemDetails = {
+          name: sanitizePromptInput(itemDetails.name, 200),
+          brand: itemDetails.brand ? sanitizePromptInput(itemDetails.brand, 100) : undefined,
+          category: itemDetails.category ? sanitizePromptInput(itemDetails.category, 100) : undefined,
+          condition: itemDetails.condition ? sanitizePromptInput(itemDetails.condition, 50) : undefined,
+        };
+        const sanitizedSize = sizeInput ? sanitizePromptInput(sizeInput, 50) : 'Unknown';
+        const sanitizedAge = ageInput ? sanitizePromptInput(ageInput, 50) : 'Unknown';
+        const sanitizedDescription = description ? sanitizePromptInput(description, 500) : 'None';
+
         const prompt = `
       Based on real market research, generate similar marketplace listings for this item:
 
-      Item Details: ${JSON.stringify(itemDetails)}
+      Item Details: ${JSON.stringify(sanitizedItemDetails)}
       User Details:
-      - Size: "${sizeInput || 'Unknown'}"
-      - Age/Era: "${ageInput || 'Unknown'}"
-      - Notes: "${description || 'None'}"
+      - Size: "${sanitizedSize}"
+      - Age/Era: "${sanitizedAge}"
+      - Notes: "${sanitizedDescription}"
 
       Market Research Findings:
       - Price Range: $${marketResearch.currentPricing.min} - $${marketResearch.currentPricing.max}

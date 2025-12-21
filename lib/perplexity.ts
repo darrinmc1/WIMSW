@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { sanitizePromptInput } from "./utils";
 
 // Perplexity uses OpenAI-compatible API
 const perplexity = new OpenAI({
@@ -34,15 +35,20 @@ export async function performMarketResearch(itemDetails: {
   category?: string;
 }): Promise<MarketResearchResult> {
   try {
-    const { name, brand, model, condition, category } = itemDetails;
+    // Sanitize all user inputs to prevent prompt injection
+    const sanitizedName = sanitizePromptInput(itemDetails.name, 200);
+    const sanitizedBrand = itemDetails.brand ? sanitizePromptInput(itemDetails.brand, 100) : '';
+    const sanitizedModel = itemDetails.model ? sanitizePromptInput(itemDetails.model, 100) : '';
+    const sanitizedCondition = itemDetails.condition ? sanitizePromptInput(itemDetails.condition, 50) : '';
+    const sanitizedCategory = itemDetails.category ? sanitizePromptInput(itemDetails.category, 100) : '';
 
-    // Construct a detailed search query
+    // Construct a detailed search query with sanitized inputs
     const searchQuery = `
-What is the current resale market value for: ${name}
-${brand ? `Brand: ${brand}` : ''}
-${model ? `Model: ${model}` : ''}
-${condition ? `Condition: ${condition}` : ''}
-${category ? `Category: ${category}` : ''}
+What is the current resale market value for: ${sanitizedName}
+${sanitizedBrand ? `Brand: ${sanitizedBrand}` : ''}
+${sanitizedModel ? `Model: ${sanitizedModel}` : ''}
+${sanitizedCondition ? `Condition: ${sanitizedCondition}` : ''}
+${sanitizedCategory ? `Category: ${sanitizedCategory}` : ''}
 
 Please provide:
 1. Current market prices (min, max, average) from recent sales on platforms like eBay, Mercari, Facebook Marketplace, Poshmark
@@ -78,9 +84,10 @@ Focus on SOLD listings and actual market data, not just asking prices.
   } catch (error: any) {
     console.error("Error performing market research:", error);
 
-    // Return a fallback result
+    // Return a fallback result (use sanitized name for consistency)
+    const sanitizedName = sanitizePromptInput(itemDetails.name, 200);
     return {
-      summary: `Unable to fetch live market data for ${itemDetails.name}. Please check your Perplexity API key.`,
+      summary: `Unable to fetch live market data for ${sanitizedName}. Please check your Perplexity API key.`,
       currentPricing: {
         min: 0,
         max: 0,

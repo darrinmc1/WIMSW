@@ -38,6 +38,8 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     createdAt: new Date(sheetsUser.createdAt),
     updatedAt: new Date(sheetsUser.createdAt),
     lastLogin: sheetsUser.lastLogin ? new Date(sheetsUser.lastLogin) : null,
+    failedAttempts: sheetsUser.failedAttempts ?? 0,
+    lockedUntil: sheetsUser.lockedUntil ? new Date(sheetsUser.lockedUntil) : null,
   };
 }
 
@@ -78,6 +80,8 @@ export async function createUser(
     createdAt: new Date(sheetsUser.createdAt),
     updatedAt: new Date(sheetsUser.createdAt),
     lastLogin: null,
+    failedAttempts: 0,
+    lockedUntil: null,
   };
 }
 
@@ -144,6 +148,8 @@ export async function getAllUsers(): Promise<User[]> {
     createdAt: new Date(user.createdAt),
     updatedAt: new Date(user.createdAt),
     lastLogin: user.lastLogin ? new Date(user.lastLogin) : null,
+    failedAttempts: user.failedAttempts ?? 0,
+    lockedUntil: user.lockedUntil ? new Date(user.lockedUntil) : null,
   }));
 }
 
@@ -236,6 +242,108 @@ export async function trackApiUsage(data: {
   }
 
   // Google Sheets: skip analytics tracking
+}
+
+/**
+ * Increment failed login attempts and lock account if threshold reached
+ */
+export async function incrementFailedAttempts(
+  email: string
+): Promise<{ isLocked: boolean; attemptsLeft: number }> {
+  if (USE_POSTGRES) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (!user) {
+        return { isLocked: false, attemptsLeft: 5 };
+      }
+
+      const newAttempts = user.failedAttempts + 1;
+
+      // Lock if 5 or more attempts
+      if (newAttempts >= 5) {
+        const lockUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+        await prisma.user.update({
+          where: { email: email.toLowerCase() },
+          data: {
+            failedAttempts: newAttempts,
+            lockedUntil: lockUntil,
+          },
+        });
+        return { isLocked: true, attemptsLeft: 0 };
+      }
+
+      // Update failed attempts
+      await prisma.user.update({
+        where: { email: email.toLowerCase() },
+        data: { failedAttempts: newAttempts },
+      });
+
+      return { isLocked: false, attemptsLeft: 5 - newAttempts };
+    } catch (error) {
+      console.error('Error incrementing failed attempts in Postgres:', error);
+      return { isLocked: false, attemptsLeft: 5 };
+    }
+  }
+
+  // Fallback to Google Sheets
+  return await sheetsDb.incrementFailedAttempts(email);
+}
+
+/**
+ * Reset failed login attempts on successful login
+ */
+export async function resetFailedAttempts(email: string): Promise<void> {
+  if (USE_POSTGRES) {
+    try {
+      await prisma.user.update({
+        where: { email: email.toLowerCase() },
+        data: {
+          failedAttempts: 0,
+          lockedUntil: null,
+        },
+      });
+    } catch (error) {
+      console.error('Error resetting failed attempts in Postgres:', error);
+    }
+    return;
+  }
+
+  // Fallback to Google Sheets
+  await sheetsDb.resetFailedAttempts(email);
+}
+
+/**
+ * Check if user is locked out
+ */
+export function isUserLocked(user: User): boolean {
+  if (!user.lockedUntil) return false;
+  const lockTime = user.lockedUntil.getTime();
+  const now = Date.now();
+  return now < lockTime;
+}
+
+/**
+ * Save password reset token
+ * Note: For now, this always uses Google Sheets even in Postgres mode
+ * as reset tokens are temporary and don't need to be in the primary database
+ */
+export async function saveResetToken(
+  email: string,
+  token: string,
+  expiresAt: string
+): Promise<boolean> {
+  return await sheetsDb.saveResetToken(email, token, expiresAt);
+}
+
+/**
+ * Verify and consume reset token
+ * Note: For now, this always uses Google Sheets even in Postgres mode
+ */
+export async function verifyResetToken(email: string, token: string): Promise<boolean> {
+  return await sheetsDb.verifyResetToken(email, token);
 }
 
 export { USE_POSTGRES };

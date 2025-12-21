@@ -1,12 +1,34 @@
 import { generateWithFallback } from "@/lib/gemini";
 import { generateListingSchema, validateRequest } from "@/lib/validations";
 import { rateLimit, getClientIdentifier, analyzeItemLimiter } from "@/lib/rate-limit";
+import { sanitizePromptInput, checkInputRelevance } from "@/lib/utils";
+import { trackStrike, isBlocked, getStrikeTimeRemaining } from "@/lib/strike-tracker";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        // Rate limiting: 5 requests per minute (same as analyze-item)
+        // Get client identifier for rate limiting and strike tracking
         const identifier = getClientIdentifier(req);
+
+        // Check if user is blocked due to excessive invalid inputs
+        const blocked = await isBlocked(identifier);
+        if (blocked) {
+            const timeRemaining = await getStrikeTimeRemaining(identifier);
+            const minutesRemaining = Math.ceil(timeRemaining / 60);
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: `Too many invalid submissions. Please try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`
+                },
+                {
+                    status: 429,
+                    headers: { 'X-Strike-Blocked': 'true' }
+                }
+            );
+        }
+
+        // Rate limiting: 5 requests per minute (same as analyze-item)
         const rateLimitResult = await rateLimit(identifier, analyzeItemLimiter);
 
         if (!rateLimitResult.success) {
@@ -36,16 +58,60 @@ export async function POST(req: Request) {
 
         const { name, brand, category, condition, features } = validation.data;
 
+        // Check relevance of required fields
+        const relevanceChecks = [
+            { field: name, name: 'Item name' },
+            { field: brand, name: 'Brand' },
+            { field: category, name: 'Category' },
+            { field: condition, name: 'Condition' },
+            { field: features, name: 'Features' },
+        ];
+
+        for (const check of relevanceChecks) {
+            if (!check.field) continue; // Skip optional empty fields
+
+            const relevanceResult = checkInputRelevance(check.field, check.name);
+            if (!relevanceResult.isRelevant) {
+                // Track strike for invalid input
+                const strikes = await trackStrike(identifier);
+                const remainingAttempts = 3 - strikes;
+
+                let errorMessage = relevanceResult.reason || 'Invalid input detected.';
+
+                if (strikes < 3) {
+                    errorMessage += ` You have ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before being temporarily blocked.`;
+                }
+
+                return NextResponse.json(
+                    { success: false, error: errorMessage },
+                    {
+                        status: 400,
+                        headers: {
+                            'X-Strike-Count': String(strikes),
+                            'X-Strikes-Remaining': String(remainingAttempts),
+                        }
+                    }
+                );
+            }
+        }
+
+        // Sanitize all user inputs to prevent prompt injection
+        const sanitizedName = sanitizePromptInput(name, 200);
+        const sanitizedBrand = brand ? sanitizePromptInput(brand, 100) : 'N/A';
+        const sanitizedCategory = category ? sanitizePromptInput(category, 100) : 'N/A';
+        const sanitizedCondition = sanitizePromptInput(condition, 50);
+        const sanitizedFeatures = features ? sanitizePromptInput(features, 500) : 'N/A';
+
         const prompt = `
       You are an expert copywriter for online marketplaces.
       Create optimized ad listings for selling an item on eBay and Facebook Marketplace.
-      
+
       Item Details:
-      - Name: ${name}
-      - Brand: ${brand || 'N/A'}
-      - Category: ${category || 'N/A'}
-      - Condition: ${condition}
-      - Key Features/Notes: ${features || 'N/A'}
+      - Name: ${sanitizedName}
+      - Brand: ${sanitizedBrand}
+      - Category: ${sanitizedCategory}
+      - Condition: ${sanitizedCondition}
+      - Key Features/Notes: ${sanitizedFeatures}
 
       For **eBay**:
       - Title: Key-word rich, concise, under 80 chars.

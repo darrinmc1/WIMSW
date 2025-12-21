@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendPasswordResetEmail } from '@/lib/email';
-import { saveResetToken } from '@/lib/google-sheets-db'; // New function we need to add
+import { saveResetToken } from '@/lib/db';
 import { rateLimit, generalLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyResetToken } from '@/lib/google-sheets-db';
+import { verifyResetToken } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {

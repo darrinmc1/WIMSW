@@ -73,25 +73,29 @@ export function AnalysisResults({ isAnalyzed, analysis }: AnalysisResultsProps) 
             {/* Market Analysis Table */}
             <Card className="overflow-hidden border-border bg-card">
                 <div className="p-4 border-b border-border bg-muted/30">
-                    <h3 className="font-semibold flex items-center gap-2">
-                        <DollarSign size={18} className="text-primary" />
-                        Market Comparison
-                    </h3>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <DollarSign size={18} className="text-primary" />
+                                Market Comparison
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Click the link icon to view similar items on each platform
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 <div className="divide-y divide-border">
                     <div className="grid grid-cols-4 p-3 text-xs font-medium text-muted-foreground bg-muted/20">
                         <div>Platform</div>
                         <div>Est. Net Profit</div>
                         <div>Speed</div>
-                        <div>Draft</div>
+                        <div>Actions</div>
                     </div>
                     {analysis.platforms.map((p) => (
-                        <div key={p.name} className={`grid grid-cols-4 p-4 items-center gap-2 transition-colors hover:bg-muted/10 ${p.name === analysis.recommendation.platform ? "bg-green-500/5" : ""}`}>
-                            <div className="flex items-center gap-3">
+                        <div key={p.name} className={`grid grid-cols-4 p-4 items-center gap-2 ${p.name === analysis.recommendation.platform ? "bg-green-500/5" : ""}`}>
+                            <div className="flex items-center gap-2">
                                 <span className="font-bold text-foreground">{p.name}</span>
-                                <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                    <ExternalLink size={14} />
-                                </a>
                             </div>
                             <div>
                                 <div className="font-bold text-foreground">{p.net}</div>
@@ -102,9 +106,22 @@ export function AnalysisResults({ isAnalyzed, analysis }: AnalysisResultsProps) 
                                     {p.speed}
                                 </span>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleCopy(p.name)} className="h-8 w-8">
-                                {copiedPlatform === p.name ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                            </Button>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="h-8 text-xs gap-1"
+                                >
+                                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink size={14} />
+                                        View
+                                    </a>
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleCopy(p.name)} className="h-8 w-8">
+                                    {copiedPlatform === p.name ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                                </Button>
+                            </div>
                         </div>
                     ))}
                 </div>
