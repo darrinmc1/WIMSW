@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { getUserByEmail, updateLastLogin, incrementFailedAttempts, resetFailedAttempts, isUserLocked } from "./google-sheets-db";
+import { APP_CONFIG } from "./config";
 
 // Don't import env here to avoid circular dependency issues
 export const authOptions: NextAuthOptions = {
@@ -28,7 +29,7 @@ export const authOptions: NextAuthOptions = {
         if (isUserLocked(user)) {
           const lockTime = new Date(user.lockedUntil!);
           const minutesLeft = Math.ceil((lockTime.getTime() - Date.now()) / 60000);
-          throw new Error(`Account locked due to too many failed attempts. Please try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''} or contact support at darrinmc1@yahoo.com`);
+          throw new Error(`Account locked due to too many failed attempts. Please try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''} or contact support at ${APP_CONFIG.supportEmail}`);
         }
 
         // Verify PIN (password field contains hashed PIN)
@@ -42,7 +43,7 @@ export const authOptions: NextAuthOptions = {
           const result = await incrementFailedAttempts(user.email);
 
           if (result.isLocked) {
-            throw new Error("Too many failed attempts. Account locked for 15 minutes. An email has been sent to reset your PIN. Or contact support at darrinmc1@yahoo.com");
+            throw new Error(`Too many failed attempts. Account locked for ${APP_CONFIG.lockoutDurationMinutes} minutes. An email has been sent to reset your PIN. Or contact support at ${APP_CONFIG.supportEmail}`);
           } else {
             throw new Error(`Invalid PIN. ${result.attemptsLeft} attempt${result.attemptsLeft > 1 ? 's' : ''} left before lockout.`);
           }
@@ -92,7 +93,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: APP_CONFIG.sessionMaxAge,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

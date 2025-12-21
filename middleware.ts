@@ -14,6 +14,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Check admin routes - require ADMIN role
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (token.role !== 'ADMIN') {
+      // Redirect non-admin users to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

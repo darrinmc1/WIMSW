@@ -23,14 +23,12 @@ export async function POST(request: Request) {
         const resetPin = Math.floor(1000 + Math.random() * 9000).toString();
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins
 
-        // TODO: Save to database/sheet
-        // For now, we'll implement a mock function or specific sheet function
+        // Save reset token to database/sheet for verification
         try {
             await saveResetToken(email, resetPin, expiresAt);
         } catch (dbError) {
             console.error('Failed to save reset token:', dbError);
-            // In MVP, we might fail here. 
-            // If we can't save the token, the user can't verify it.
+            // If we can't save the token, the user won't be able to verify it
             return NextResponse.json({ error: 'Database error. Please try again.' }, { status: 500 });
         }
 
@@ -44,7 +42,6 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             message: 'Reset PIN sent',
-            // debug: resetPin // REMOVE IN PRODUCTION
         });
 
     } catch (error) {

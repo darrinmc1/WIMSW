@@ -11,11 +11,89 @@ const nextConfig = {
   compress: true,
   images: {
     remotePatterns: [
+      // E-commerce platforms
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'ebay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ebay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'poshmark.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.poshmark.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mercari.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.mercari.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'depop.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.depop.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'facebook.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.facebook.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'offerup.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.offerup.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'craigslist.org',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.craigslist.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gumtree.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gumtree.com',
+      },
+      // Common CDNs for product images
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cloudinary.com',
       },
     ],
+    // Note: User-uploaded images are handled via base64 data URLs, not remote URLs
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   async headers() {
     return [

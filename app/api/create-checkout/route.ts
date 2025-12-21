@@ -35,15 +35,25 @@ export async function POST(request: Request) {
         const body = await request.json();
         console.log('Create Checkout:', body);
 
-        // TODO: Implement real Stripe checkout session
-        // const session = await stripe.checkout.sessions.create({
+        // FEATURE: Stripe Integration (Not Yet Implemented)
+        // This is a placeholder for future Stripe payment integration.
+        // To implement:
+        // 1. Install Stripe: npm install stripe @stripe/stripe-js
+        // 2. Add STRIPE_SECRET_KEY to environment variables
+        // 3. Create checkout session with the code below:
+        //
+        // import Stripe from 'stripe';
+        // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+        // const checkoutSession = await stripe.checkout.sessions.create({
         //   customer_email: session.user.email,
         //   mode: 'subscription',
         //   line_items: [{ price: body.priceId, quantity: 1 }],
         //   success_url: `${process.env.NEXTAUTH_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         //   cancel_url: `${process.env.NEXTAUTH_URL}/checkout`,
         // });
+        // return NextResponse.json({ checkoutUrl: checkoutSession.url });
 
+        // For now, redirect directly to success page (MVP behavior)
         const checkoutUrl = body.successUrl || '/success';
 
         return NextResponse.json({
