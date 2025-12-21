@@ -1,0 +1,175 @@
+// Prisma Schema for WhatIsMyStuffWorth
+// Database: PostgreSQL (Vercel Postgres recommended)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // For migrations with Vercel Postgres
+}
+
+// User model
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed with bcrypt
+  name      String?
+  plan      UserPlan @default(FREE)
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+
+  // Relations
+  research  ResearchHistory[]
+  sessions  Session[]
+
+  @@index([email])
+  @@index([plan])
+  @@map("users")
+}
+
+enum UserPlan {
+  FREE
+  PREMIUM
+  ENTERPRISE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// NextAuth session model
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// Research history model
+model ResearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Item details
+  itemName     String
+  itemBrand    String
+  itemCategory String
+  condition    String
+  size         String?
+  estimatedPrice Float
+
+  // Research results (stored as JSON)
+  results      Json
+
+  // Metadata
+  isLocalOnly  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([itemName, itemBrand]) // For finding similar searches
+  @@map("research_history")
+}
+
+// API usage tracking (for billing and analytics)
+model ApiUsage {
+  id        String   @id @default(cuid())
+  userId    String?  // Null for anonymous users
+  endpoint  String   // Which API endpoint was called
+
+  // Cost tracking
+  cached    Boolean  @default(false)
+  cost      Float    @default(0) // Estimated cost in USD
+
+  // Performance tracking
+  responseTime Int    // Milliseconds
+  success   Boolean  @default(true)
+
+  // Request metadata
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([endpoint])
+  @@index([createdAt])
+  @@map("api_usage")
+}
+
+// Cached market research (optional: move cache to DB for persistence)
+model CachedResearch {
+  id          String   @id @default(cuid())
+  cacheKey    String   @unique
+
+  // Item signature
+  itemName     String
+  itemBrand    String
+  itemCategory String
+  condition    String
+  isLocalOnly  Boolean
+
+  // Cached data
+  data        Json
+
+  // Cache metadata
+  hitCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  lastAccess  DateTime @default(now())
+
+  @@index([cacheKey])
+  @@index([expiresAt]) // For cleanup job
+  @@index([itemName, itemBrand])
+  @@map("cached_research")
+}
+
+// Waitlist / Interest signups
+model InterestSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  company   String?
+  message   String?
+  source    String?  // Where they came from
+  createdAt DateTime @default(now())
+  contacted Boolean  @default(false)
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("interest_signups")
+}
+
+// Contact sales requests
+model ContactRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  message   String
+  status    ContactStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  respondedAt DateTime?
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_requests")
+}
+
+enum ContactStatus {
+  PENDING
+  RESPONDED
+  CLOSED
+}

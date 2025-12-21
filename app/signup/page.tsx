@@ -1,0 +1,228 @@
+"use client"
+
+import { useSearchParams, useRouter } from 'next/navigation'
+import { BrandName } from '@/components/brand-name'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
+import { Card } from '@/components/ui/card'
+import Link from 'next/link'
+import { Suspense, useState } from 'react'
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, Loader2, Shield, CreditCard } from 'lucide-react'
+import { signIn } from 'next-auth/react'
+import { toast } from 'sonner'
+import { PasswordStrengthMeter } from '@/components/password-strength-meter'
+
+function SignupContent() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const plan = searchParams.get('plan')
+    const emailParam = searchParams.get('email')
+
+    const [name, setName] = useState('')
+    const [email, setEmail] = useState(emailParam || '')
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            toast.error('Passwords do not match')
+            return
+        }
+
+        // Validate password length
+        if (password.length < 8) {
+            toast.error('Password must be at least 8 characters')
+            return
+        }
+
+        setIsLoading(true)
+
+        try {
+            // Register user
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: name || undefined,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!data.success) {
+                toast.error(data.error || 'Registration failed')
+                setIsLoading(false)
+                return
+            }
+
+            // Also save to signup interest sheet
+            await fetch('/api/signup-interest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    source: 'signup-page',
+                    plan: plan || 'free'
+                }),
+            })
+
+            toast.success('Account created successfully!')
+
+            // Auto-login the user
+            const signInResult = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            })
+
+            if (signInResult?.error) {
+                toast.error('Account created but login failed. Please login manually.')
+                router.push('/login')
+                return
+            }
+
+            // Redirect to market research
+            router.push('/market-research')
+            router.refresh()
+        } catch (error) {
+            console.error('Signup error:', error)
+            toast.error('An error occurred. Please try again.')
+            setIsLoading(false)
+        }
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full p-8 shadow-xl border-indigo-100 bg-white/80 backdrop-blur-sm">
+                <div className="mb-6">
+                    <Link href="/" className="text-sm text-muted-foreground hover:text-indigo-600 flex items-center gap-1 transition-colors">
+                        <ArrowLeft size={16} /> Back to Home
+                    </Link>
+                </div>
+
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 mb-4">
+                        <Lock size={24} />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
+                    <p className="text-gray-600 mt-2">
+                        {plan ? `Sign up for the ${plan} plan` : <BrandName />}
+                    </p>
+                    <div className="flex flex-col items-center gap-3 mt-3">
+                        <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-700 bg-green-50 py-1.5 px-3 rounded-full w-fit">
+                            <CreditCard size={14} />
+                            <span>No credit card required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Name (Optional)</label>
+                        <div className="relative text-gray-900">
+                            <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                            <Input
+                                type="text"
+                                placeholder="Your name"
+                                className="pl-10 bg-white !text-gray-900"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Email Address</label>
+                        <div className="relative text-gray-900">
+                            <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                            <Input
+                                type="email"
+                                placeholder="you@example.com"
+                                className="pl-10 bg-white !text-gray-900"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Password (min 8 characters)</label>
+                        <div className="relative text-gray-900">
+                            <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                            <PasswordInput
+                                placeholder="••••••••"
+                                className="pl-10 !text-gray-900 bg-white"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={8}
+                            />
+                        </div>
+                        <PasswordStrengthMeter password={password} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                        <div className="relative text-gray-900">
+                            <Lock className="absolute left-3 top-3 text-gray-400 z-10" size={18} />
+                            <PasswordInput
+                                placeholder="••••••••"
+                                className="pl-10 !text-gray-900 bg-white"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                minLength={8}
+                            />
+                        </div>
+                    </div>
+
+                    <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 text-lg" disabled={isLoading}>
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Creating Account...
+                            </>
+                        ) : (
+                            'Sign Up'
+                        )}
+                    </Button>
+                </form>
+
+                <p className="text-center text-sm text-gray-500 mt-6">
+                    Already have an account? <Link href="/login" className="text-indigo-600 font-semibold hover:underline">Log in</Link>
+                </p>
+
+                {/* Trust Signals */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Shield className="text-green-600 h-4 w-4" />
+                        <span>256-bit SSL Secured</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                        We respect your privacy. No spam.
+                    </div>
+                </div>
+            </Card>
+        </div>
+    )
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <SignupContent />
+        </Suspense>
+    )
+}

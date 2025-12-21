@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Analysis - WhatIsMyStuffWorth</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .chunk-list {
+            list-style: none;
+        }
+        .chunk-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .chunk-size {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            font-size: 1.2em;
+        }
+        .chunk-bar-container {
+            flex: 1;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+        .chunk-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+        }
+        .chunk-name {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.85em;
+        }
+        .insights {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .insights h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        .insights ul {
+            list-style-position: inside;
+            line-height: 1.8;
+        }
+        .insights li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Bundle Size Analysis</h1>
+
+        <div class="card">
+            <h2>📊 Overview</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value">1.5 MB</div>
+                    <div class="stat-label">Total Static Assets</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">JavaScript Chunks</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">1.12 MB</div>
+                    <div class="stat-label">Total JS Size</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📈 Top 15 Largest Chunks</h2>
+            <ul class="chunk-list">
+                <li class="chunk-item">
+                    <span class="chunk-size">211 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 100%;"></div>
+                    </div>
+                    <span class="chunk-name">ffaef317944f28e1.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">129 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 61%;"></div>
+                    </div>
+                    <span class="chunk-name">a7bfe1fd8d4c3da2.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">110 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 52%;"></div>
+                    </div>
+                    <span class="chunk-name">a6dad97d9634a72d.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">85 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 40%;"></div>
+                    </div>
+                    <span class="chunk-name">a8420764b83f2910.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">73 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 35%;"></div>
+                    </div>
+                    <span class="chunk-name">7a0866708e2e5226.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">69 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 33%;"></div>
+                    </div>
+                    <span class="chunk-name">9d52afbb16025d77.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">65 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 31%;"></div>
+                    </div>
+                    <span class="chunk-name">4e95bacaca2deb07.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">49 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 23%;"></div>
+                    </div>
+                    <span class="chunk-name">0fcc237deab26fa4.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">47 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 22%;"></div>
+                    </div>
+                    <span class="chunk-name">6e34a931b25ab87d.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">47 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 22%;"></div>
+                    </div>
+                    <span class="chunk-name">3060e4e9110d9d04.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">40 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 19%;"></div>
+                    </div>
+                    <span class="chunk-name">3b374146e7c09023.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">28 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 13%;"></div>
+                    </div>
+                    <span class="chunk-name">088900aec3a80e91.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">28 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 13%;"></div>
+                    </div>
+                    <span class="chunk-name">06ddc2fb41d684b6.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">24 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 11%;"></div>
+                    </div>
+                    <span class="chunk-name">b582c0796705ace0.js</span>
+                </li>
+                <li class="chunk-item">
+                    <span class="chunk-size">21 KB</span>
+                    <div class="chunk-bar-container">
+                        <div class="chunk-bar" style="width: 10%;"></div>
+                    </div>
+                    <span class="chunk-name">400239156b63acb3.js</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <div class="insights">
+                <h3>✅ Performance Insights</h3>
+                <ul>
+                    <li><strong>Good Code Splitting:</strong> 24 separate chunks means efficient code splitting</li>
+                    <li><strong>Largest Chunk:</strong> 211 KB is reasonable for a feature-rich React app</li>
+                    <li><strong>Lazy Loading Working:</strong> Dynamic imports creating separate, smaller chunks</li>
+                    <li><strong>Optimizations Applied:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Home page components lazy loaded ✓</li>
+                            <li>Modal components on-demand ✓</li>
+                            <li>Console logs removed in production ✓</li>
+                            <li>Package imports optimized ✓</li>
+                        </ul>
+                    </li>
+                    <li><strong>Room for Improvement:</strong> Consider further splitting the 211 KB chunk if needed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
