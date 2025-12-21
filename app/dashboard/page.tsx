@@ -3,29 +3,25 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { PasswordInput } from "@/components/ui/password-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, User, History, Key, LogOut, Eye, EyeOff, Award } from "lucide-react"
+import { User, History, Key, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { BrandName } from "@/components/brand-name"
 import { ResearchHistoryList } from "@/components/research-history-list"
 import { toast } from "sonner"
-import { PasswordStrengthMeter } from "@/components/password-strength-meter"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
+
+// Imported Components
+import { ProfileCard } from "./components/profile-card"
+import { DashboardStats } from "./components/dashboard-stats"
+import { PasswordChangeForm } from "./components/password-change-form"
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
-
-    // Password Change State
-    const [currentPassword, setCurrentPassword] = useState("")
-    const [newPassword, setNewPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
 
     // History & Stats State
     const [history, setHistory] = useState([])
@@ -73,40 +69,6 @@ export default function DashboardPage() {
         await signOut({ callbackUrl: "/" })
     }
 
-    const handlePasswordChange = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (newPassword !== confirmPassword) {
-            toast.error("New passwords do not match")
-            return
-        }
-        if (newPassword.length < 8) {
-            toast.error("Password must be at least 8 characters")
-            return
-        }
-
-        setIsLoading(true)
-        try {
-            const res = await fetch("/api/user/change-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentPassword, newPassword }),
-            })
-            const data = await res.json()
-            if (!res.ok) {
-                toast.error(data.error || "Failed to change password")
-            } else {
-                toast.success("Password changed successfully")
-                setCurrentPassword("")
-                setNewPassword("")
-                setConfirmPassword("")
-            }
-        } catch (error) {
-            toast.error("An error occurred")
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     if (status === "loading") {
         return <DashboardSkeleton />
     }
@@ -151,50 +113,8 @@ export default function DashboardPage() {
 
                     <TabsContent value="overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card className="p-6 border-white/10 bg-white/5 backdrop-blur-sm shadow-xl">
-                                <h3 className="text-lg font-semibold text-white mb-4">Profile Information</h3>
-                                <div className="space-y-3 text-sm">
-                                    <div>
-                                        <div className="text-gray-500 mb-1">Name</div>
-                                        <div className="font-medium text-gray-200">{session.user?.name || "No name set"}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-gray-500 mb-1">Email</div>
-                                        <div className="font-medium text-gray-200">{session.user?.email}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-gray-500 mb-1">Plan Status</div>
-                                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                                            Free Plan
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
-
-                            <Card className="p-6 border-white/10 bg-white/5 backdrop-blur-sm shadow-xl">
-                                <h3 className="text-lg font-semibold text-white mb-4">Quick Stats</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-white/5 p-4 rounded-lg border border-white/10 shadow-sm">
-                                        <div className="text-2xl font-bold text-indigo-400">{stats.totalItems}</div>
-                                        <div className="text-xs text-gray-500 mt-1">Items Analyzed</div>
-                                    </div>
-                                    <div className="bg-white/5 p-4 rounded-lg border border-white/10 shadow-sm">
-                                        <div className="text-2xl font-bold text-purple-400">
-                                            ${stats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">Potential Value</div>
-                                    </div>
-                                </div>
-                                {stats.totalItems >= 10 && (
-                                    <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg flex items-center gap-3 animate-in slide-in-from-bottom-2">
-                                        <Award className="h-6 w-6 text-yellow-600" />
-                                        <div>
-                                            <div className="font-semibold text-yellow-900 text-sm">Power Seller!</div>
-                                            <div className="text-xs text-yellow-700">You've analyzed 10+ items</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </Card>
+                            <ProfileCard session={session} />
+                            <DashboardStats stats={stats} />
                         </div>
                     </TabsContent>
 
@@ -211,47 +131,7 @@ export default function DashboardPage() {
                     </TabsContent>
 
                     <TabsContent value="security" className="max-w-xl animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <Card className="p-6 border-white/10 bg-white/5 backdrop-blur-sm shadow-xl">
-                            <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>
-                            <form onSubmit={handlePasswordChange} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">Current Password</label>
-                                    <div className="relative">
-                                        <PasswordInput
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            required
-                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">New Password</label>
-                                    <div className="relative">
-                                        <PasswordInput
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            required
-                                            minLength={8}
-                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-500"
-                                        />
-                                    </div>
-                                    <PasswordStrengthMeter password={newPassword} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">Confirm New Password</label>
-                                    <PasswordInput
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        required
-                                        className="bg-white/10 border-white/10 text-white placeholder:text-gray-500"
-                                    />
-                                </div>
-                                <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700 w-full mt-4">
-                                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Password"}
-                                </Button>
-                            </form>
-                        </Card>
+                        <PasswordChangeForm />
                     </TabsContent>
                 </Tabs>
             </main>

@@ -49,6 +49,23 @@ export function InteractiveDemo() {
         ]
       },
       {
+        name: "Facebook Marketplace",
+        listing: "[Brand] [Item] - Great Condition - Local Pickup or Shipping Available",
+        price: "",
+        fees: "",
+        net: "",
+        speed: "Fast (1-2 days)",
+        demand: "Very High",
+        url: "",
+        instructions: "Respond quickly to messages. Meet in public places for local pickup. Use Facebook Shipping for out-of-area buyers.",
+        settings: [
+          "Category: Apparel & Accessories",
+          "Condition: Used - Like New",
+          "Shipping: Available",
+          "Local Pickup: Yes"
+        ]
+      },
+      {
         name: "Poshmark",
         listing: "[Brand] [Item] 💙 #fashion #style #authentic",
         price: "",
@@ -164,6 +181,7 @@ export function InteractiveDemo() {
             // Create real search URL
             let realUrl = ""
             if (p.name === "eBay") realUrl = `https://www.ebay.com/sch/i.html?_nkw=${searchTerm}`
+            if (p.name === "Facebook Marketplace") realUrl = `https://www.facebook.com/marketplace/search?query=${searchTerm}`
             if (p.name === "Poshmark") realUrl = `https://poshmark.com/search?query=${searchTerm}`
             if (p.name === "Depop") realUrl = `https://www.depop.com/search/?q=${searchTerm}`
 

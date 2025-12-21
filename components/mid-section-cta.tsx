@@ -20,9 +20,9 @@ export function MidSectionCTA() {
                 <p className="text-lg sm:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
                     Instantly find out what your items are worth and sell them faster with AI.
                 </p>
-                <Link href="/signup">
+                <Link href="/market-research">
                     <Button size="lg" className="bg-white text-indigo-600 hover:bg-white/90 text-lg px-8 h-12 rounded-full shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 font-semibold">
-                        Sign Up for Free <ArrowRight className="ml-2 h-5 w-5" />
+                        Try It Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                 </Link>
             </div>

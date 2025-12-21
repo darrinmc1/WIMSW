@@ -54,7 +54,7 @@ export function FinalCTA() {
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 to-transparent pointer-events-none" />
 
       <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white text-balance tracking-tight">Ready to Start Selling Smarter?</h2>
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white text-balance tracking-tight">Try for free!</h2>
 
         <p className="text-xl text-indigo-100 max-w-2xl mx-auto text-pretty">
           Join thousands of resellers using AI to price their items perfectly

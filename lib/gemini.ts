@@ -21,11 +21,11 @@ interface GenerateOptions {
 export async function generateWithFallback(options: GenerateOptions): Promise<string> {
   const { prompt, imagePart, responseMimeType } = options;
 
-  // Gemini 3.0 and 2.5 are the current supported versions (1.5 deprecated April 2025)
+  // Use only models available in the free tier
   const models = [
-    "gemini-3-pro-preview", // Latest cutting-edge (User requested 3.0)
-    "gemini-2.5-pro",       // Stable high-intelligence
-    "gemini-2.5-flash"      // Stable high-speed
+    "gemini-3-flash",       // User has access to this model
+    "gemini-2.5-flash",     // Fast and available in free tier
+    "gemini-2.5-flash-lite" // Fallback option
   ];
   const MAX_RETRIES = 2;
 

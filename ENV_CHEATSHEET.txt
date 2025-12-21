@@ -1,0 +1,116 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  WIMSW.com - Environment Setup Cheatsheet               ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+📍 YOU ARE HERE: Local folder with placeholder .env.local file
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 1: Get Your API Keys (5 minutes)                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  🔑 PERPLEXITY_API_KEY (CRITICAL - fixes Facebook Marketplace)
+     👉 https://www.perplexity.ai/settings/api
+     💰 Free: $5 credit (~1,000 requests)
+     
+  🔑 GEMINI_API_KEY (CRITICAL - analyzes images)
+     👉 https://aistudio.google.com/app/apikey
+     💰 Free: 1,500 requests/day
+     
+  🔑 DATABASE_URL (CRITICAL - stores data)
+     👉 Via Vercel: vercel.com → Storage → Create Postgres
+     💰 Free: 60 compute hours/month
+     
+  🔑 NEXTAUTH_SECRET (CRITICAL - secures auth)
+     👉 Run: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+     💰 Free: N/A
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 2: Add Keys to .env.local (2 minutes)                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  📝 Edit .env.local:
+     
+     GEMINI_API_KEY=AIzaSy...
+     PERPLEXITY_API_KEY=pplx-...
+     DATABASE_URL=postgresql://...
+     NEXTAUTH_SECRET=abc123...
+     NEXTAUTH_URL=http://localhost:3000
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 3: Start Development (1 minute)                                    │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  🚀 Run these commands:
+  
+     npm install
+     npm run db:push
+     npm run dev
+     
+  ✅ Open: http://localhost:3000
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 4: Deploy to Vercel (5 minutes)                                    │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  🌐 Add same variables to Vercel:
+     👉 vercel.com/darrinmc1s-projects/whatismystuffworth/settings/environment-variables
+     
+  ⚙️ Important: Select ALL environments (Production, Preview, Development)
+  
+  🔄 Redeploy: Deployments → ... → Redeploy (uncheck cache)
+  
+  ✅ Test: Visit app → Upload item → Verify Facebook Marketplace appears
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║ 🆘 QUICK HELP                                                            ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+  Check setup:     npx tsx scripts/check-env.ts
+  Interactive:     npx tsx scripts/setup-env.ts
+  Full guide:      cat QUICK_START.md
+  Vercel guide:    cat VERCEL_SETUP_GUIDE.md
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║ 💡 WHAT FIXES FACEBOOK MARKETPLACE ISSUE?                                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+  The issue is caused by missing PERPLEXITY_API_KEY in Vercel production.
+  
+  Without Perplexity API:
+    ❌ App falls back to Gemini only
+    ❌ Gemini may not consistently include Facebook Marketplace
+    ❌ Results are less accurate
+    
+  With Perplexity API:
+    ✅ Real-time market research from actual listings
+    ✅ Facebook Marketplace ALWAYS included
+    ✅ eBay, Poshmark, Mercari, Depop also searched
+    ✅ Better pricing accuracy
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║ 📊 ESTIMATED SETUP TIME                                                  ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+  Get API keys:        5 minutes
+  Edit .env.local:     2 minutes
+  Start dev server:    1 minute
+  Deploy to Vercel:    5 minutes
+  ────────────────────────────────
+  TOTAL:              13 minutes
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║ ✅ SUCCESS CRITERIA                                                       ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+  Local:
+    ✓ npx tsx scripts/check-env.ts shows all green ✅
+    ✓ npm run dev starts without errors
+    ✓ Can upload image and get analysis
+    ✓ Market research includes Facebook Marketplace
+    
+  Production:
+    ✓ All variables added to Vercel
+    ✓ Deployment succeeds
+    ✓ App loads without errors
+    ✓ Facebook Marketplace appears in results
+
