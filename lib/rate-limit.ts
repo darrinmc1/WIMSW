@@ -100,7 +100,7 @@ function createRateLimiter(maxRequests: number, windowString: string) {
 
 // Create rate limiters for different API endpoints
 export const analyzeItemLimiter = createRateLimiter(5, "1 m"); // 5 requests per minute (authenticated users)
-export const freeUserLimiter = createRateLimiter(2, "24 h"); // 2 requests per day (free/unauthenticated users)
+export const freeUserLimiter = createRateLimiter(3, "24 h"); // 3 requests per day (free/unauthenticated users)
 export const marketResearchLimiter = createRateLimiter(10, "1 m"); // 10 requests per minute
 export const generalLimiter = createRateLimiter(30, "1 m"); // 30 requests per minute
 

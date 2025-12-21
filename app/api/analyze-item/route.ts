@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         if (!rateLimitResult.success) {
             const errorMessage = isAuthenticated
                 ? "Too many requests. Please try again later."
-                : "You've reached your free daily limit of 2 analyses. Sign up to continue analyzing items!";
+                : "You've reached your free daily limit of 3 analyses. Sign up to continue analyzing items!";
 
             return NextResponse.json<AnalyzeItemResponse>(
                 {
