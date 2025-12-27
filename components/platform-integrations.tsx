@@ -1,33 +1,39 @@
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 export function PlatformIntegrations() {
   const platforms = [
     {
       name: "eBay",
       description: "Keyword-optimized titles and detailed descriptions for maximum visibility",
-      logo: "/ebay-logo.jpg",
+      logo: "/ebay-logo.svg",
     },
     {
       name: "Poshmark",
       description: "Hashtag-rich descriptions and community-friendly language",
-      logo: "/poshmark-logo.jpg",
+      logo: "/poshmark-logo.svg",
     },
     {
       name: "Depop",
       description: "Casual, trendy descriptions with emoji and vintage appeal",
-      logo: "/depop-logo.jpg",
+      logo: "/depop-logo.svg",
     },
     {
       name: "Facebook Marketplace",
       description: "Local-focused listings with clear pricing and quick response prompts",
-      logo: "/facebook-marketplace-logo.jpg",
+      logo: "/facebook-marketplace-logo.svg",
     },
     {
       name: "Mercari",
       description: "Mobile-optimized listings with shipping details and brand callouts",
-      logo: "/mercari-logo.jpg",
+      logo: "/mercari-logo.svg",
+    },
+    {
+      name: "Gumtree",
+      description: "Local classifieds for Australia and UK with category-specific pricing",
+      logo: "/gumtree-logo.svg",
     },
   ]
 
@@ -48,7 +54,13 @@ export function PlatformIntegrations() {
               className="p-6 bg-card border-border hover:border-indigo-500/50 transition-all duration-300"
             >
               <div className="h-16 flex items-center mb-4">
-                <div className="text-2xl font-bold text-foreground">{platform.name}</div>
+                <Image 
+                  src={platform.logo} 
+                  alt={`${platform.name} logo`}
+                  width={200}
+                  height={60}
+                  className="h-12 w-auto object-contain"
+                />
               </div>
               <p className="text-muted-foreground leading-relaxed">{platform.description}</p>
             </Card>

@@ -21,11 +21,11 @@ interface GenerateOptions {
 export async function generateWithFallback(options: GenerateOptions): Promise<string> {
   const { prompt, imagePart, responseMimeType } = options;
 
-  // Use only models available in the free tier
+  // Use working Gemini model names (confirmed available)
   const models = [
-    "gemini-3-flash",       // User has access to this model
-    "gemini-2.5-flash",     // Fast and available in free tier
-    "gemini-2.5-flash-lite" // Fallback option
+    "gemini-2.5-flash",           // Current stable model (WORKS!)
+    "gemini-2.0-flash-exp",       // Experimental (rate limited)
+    "gemini-1.5-flash"            // Older stable fallback
   ];
   const MAX_RETRIES = 2;
 

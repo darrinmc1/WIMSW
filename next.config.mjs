@@ -1,9 +1,4 @@
 import { withSentryConfig } from '@sentry/nextjs';
-import withBundleAnalyzer from '@next/bundle-analyzer';
-
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -172,20 +167,6 @@ const nextConfig = {
       'framer-motion',
     ],
   },
-  // Bundle analyzer (run with ANALYZE=true npm run build)
-  webpack: (config, { isServer }) => {
-    if (process.env.ANALYZE === 'true') {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          reportFilename: isServer ? '../analyze/server.html' : './analyze/client.html',
-          openAnalyzer: false,
-        })
-      );
-    }
-    return config;
-  },
 }
 
 // Sentry configuration options
@@ -222,4 +203,4 @@ const sentryOptions = {
   },
 };
 
-export default bundleAnalyzer(withSentryConfig(nextConfig, sentryOptions));
+export default withSentryConfig(nextConfig, sentryOptions);

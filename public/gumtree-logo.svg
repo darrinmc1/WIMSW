@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- Gumtree green background -->
+  <rect width="200" height="60" fill="#72ef36" rx="8"/>
+  
+  <!-- Tree icon -->
+  <g transform="translate(20, 10)">
+    <!-- Tree trunk -->
+    <rect x="13" y="28" width="6" height="12" fill="#654321"/>
+    
+    <!-- Tree leaves (3 circles) -->
+    <circle cx="16" cy="14" r="8" fill="#1e7b34"/>
+    <circle cx="10" cy="24" r="7" fill="#1e7b34"/>
+    <circle cx="22" cy="24" r="7" fill="#1e7b34"/>
+  </g>
+  
+  <!-- "Gumtree" text -->
+  <text x="60" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1e7b34">
+    Gumtree
+  </text>
+</svg>

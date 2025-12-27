@@ -68,6 +68,7 @@ export function MarketResults({
             case "depop": return "bg-purple-500 hover:bg-purple-600"
             case "mercari": return "bg-orange-500 hover:bg-orange-600"
             case "facebook": return "bg-blue-600 hover:bg-blue-700"
+            case "gumtree": return "bg-green-600 hover:bg-green-700"
             default: return "bg-gray-500 hover:bg-gray-600"
         }
     }

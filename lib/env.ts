@@ -3,9 +3,9 @@ import { z } from "zod";
 const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
   PERPLEXITY_API_KEY: z.string().min(1, "PERPLEXITY_API_KEY is required"),
-  GOOGLE_SHEET_ID: z.string().min(1, "GOOGLE_SHEET_ID is required"),
-  GOOGLE_CLIENT_EMAIL: z.string().email("GOOGLE_CLIENT_EMAIL must be a valid email"),
-  GOOGLE_PRIVATE_KEY: z.string().min(1, "GOOGLE_PRIVATE_KEY is required"),
+  GOOGLE_SHEET_ID: z.string().optional(), // Optional - for legacy Google Sheets storage
+  GOOGLE_CLIENT_EMAIL: z.string().email("GOOGLE_CLIENT_EMAIL must be a valid email").optional(),
+  GOOGLE_PRIVATE_KEY: z.string().optional(),
   NEXTAUTH_SECRET: z.string().min(1, "NEXTAUTH_SECRET is required"),
   NEXTAUTH_URL: z.string().url("NEXTAUTH_URL must be a valid URL").optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),

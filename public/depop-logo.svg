@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- Depop red background -->
+  <rect width="200" height="60" fill="#ff0000" rx="8"/>
+  
+  <!-- Circle icon -->
+  <g transform="translate(25, 15)">
+    <circle cx="15" cy="15" r="12" fill="#ffffff"/>
+    <circle cx="15" cy="15" r="6" fill="#ff0000"/>
+  </g>
+  
+  <!-- "DEPOP" text -->
+  <text x="55" y="38" font-family="Arial Black, sans-serif" font-size="24" font-weight="900" fill="#ffffff" letter-spacing="2">
+    DEPOP
+  </text>
+</svg>

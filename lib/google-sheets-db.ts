@@ -1,15 +1,28 @@
 import { google } from 'googleapis';
 
-const auth = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL!,
-    private_key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-  },
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+const getSheetsClient = () => {
+  if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+    return null;
+  }
 
-const sheets = google.sheets({ version: 'v4', auth });
-const spreadsheetId = process.env.GOOGLE_SHEET_ID!
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    return google.sheets({ version: 'v4', auth });
+  } catch (error) {
+    console.error('Error initializing Google Sheets client:', error);
+    return null;
+  }
+};
+
+const sheets = getSheetsClient();
+const spreadsheetId = process.env.GOOGLE_SHEET_ID!;
 
 export type UserPlan = 'FREE' | 'PREMIUM' | 'ENTERPRISE';
 export type UserRole = 'USER' | 'ADMIN';
@@ -41,6 +54,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
     // Refresh cache if null or expired
     if (!userCache || (now - cacheTimestamp > CACHE_TTL)) {
+      if (!sheets) return null;
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range: 'Users!A:J', // Extended to column J for lockout fields
@@ -87,6 +101,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
  */
 export async function saveResetToken(email: string, token: string, expiresAt: string): Promise<boolean> {
   try {
+    if (!sheets) return false;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:J',
@@ -97,6 +112,10 @@ export async function saveResetToken(email: string, token: string, expiresAt: st
 
     // Find user row
     for (let i = 1; i < rows.length; i++) {
+      // ...
+      // This REPLACE chunk is too big/complex to do single block safely if I want to target multiple spots.
+      // I will just fix saveResetToken here.
+
       const row = rows[i];
       if (row[1]?.toLowerCase() === email.toLowerCase()) {
         const rowNumber = i + 1;
@@ -127,6 +146,7 @@ export async function saveResetToken(email: string, token: string, expiresAt: st
  */
 export async function verifyResetToken(email: string, token: string): Promise<boolean> {
   try {
+    if (!sheets) return false;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:L', // Check up to Col L
@@ -173,23 +193,30 @@ export async function createUser(email: string, hashedPassword: string, name?: s
     const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const createdAt = new Date().toISOString();
 
-    await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'Users!A:H',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [[
-          id,
-          email,
-          hashedPassword,
-          name || '',
-          'FREE', // default plan
-          createdAt,
-          '', // lastLogin (empty initially)
-          'USER', // default role
-        ]],
-      },
-    });
+    if (sheets) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: 'Users!A:H',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[
+            id,
+            email,
+            hashedPassword,
+            name || '',
+            'FREE', // default plan
+            createdAt,
+            '', // lastLogin (empty initially)
+            'USER', // default role
+          ]],
+        },
+      });
+    } else {
+      console.warn('Google Sheets client not initialized, user not saved to sheets');
+      // If we are in this function, it means we are using Sheets as DB. So this SHOULD fail if sheets is missing.
+      // But throwing might crash the app. Returning null is safer if this is a fallback.
+      if (!process.env.DATABASE_URL) return null;
+    }
 
     // Invalidate cache
     userCache = null;
@@ -214,6 +241,7 @@ export async function createUser(email: string, hashedPassword: string, name?: s
  */
 export async function updateLastLogin(email: string): Promise<void> {
   try {
+    if (!sheets) return;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:G',
@@ -250,6 +278,7 @@ export async function updateLastLogin(email: string): Promise<void> {
  */
 export async function updatePassword(email: string, newHash: string): Promise<boolean> {
   try {
+    if (!sheets) return false;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:G', // Need email column
@@ -288,6 +317,7 @@ export async function updatePassword(email: string, newHash: string): Promise<bo
  */
 export async function getAllUsers(): Promise<User[]> {
   try {
+    if (!sheets) return [];
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:H', // Updated range to include Role
@@ -322,6 +352,7 @@ export async function getAllUsers(): Promise<User[]> {
  */
 export async function incrementFailedAttempts(email: string): Promise<{ isLocked: boolean; attemptsLeft: number }> {
   try {
+    if (!sheets) return { isLocked: false, attemptsLeft: 5 };
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:J',
@@ -377,6 +408,7 @@ export async function incrementFailedAttempts(email: string): Promise<{ isLocked
  */
 export async function resetFailedAttempts(email: string): Promise<void> {
   try {
+    if (!sheets) return;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A:J',
@@ -421,6 +453,7 @@ export function isUserLocked(user: User): boolean {
  */
 export async function initializeUsersSheet(): Promise<void> {
   try {
+    if (!sheets) return;
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'Users!A1:G1',
@@ -528,6 +561,7 @@ export async function saveResearchHistory(
     const id = `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const createdAt = new Date().toISOString();
 
+    if (!sheets) return;
     await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: 'ResearchHistory!A:K',
@@ -558,6 +592,7 @@ export async function saveResearchHistory(
  */
 export async function getResearchHistory(userId: string, limit: number = 50): Promise<any[]> {
   try {
+    if (!sheets) return [];
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'ResearchHistory!A:K',

@@ -154,7 +154,7 @@ export async function POST(req: Request) {
 
       ${isLocalOnly
             ? "PLATFORMS: Facebook Marketplace, OfferUp, Craigslist, Gumtree (pickup-only platforms). Generate at least 1-2 items for EACH platform."
-            : "PLATFORMS: eBay, Poshmark, Mercari, Depop, Facebook Marketplace. Generate at least 1-2 items for EACH platform including Facebook Marketplace."}
+            : "PLATFORMS: eBay, Poshmark, Mercari, Depop, Gumtree, Facebook Marketplace. Generate at least 1-2 items for EACH platform including Facebook Marketplace and Gumtree."}
 
       CRITICAL: Ensure you include listings for ALL platforms listed above. Facebook Marketplace is required.
 
@@ -162,8 +162,8 @@ export async function POST(req: Request) {
       {
         "similar_items": [
           {
-            "platform": "string (lowercase: ebay, poshmark, mercari, depop, facebook)",
-            "platform_name": "string (exact: eBay, Poshmark, Mercari, Depop, Facebook Marketplace)",
+            "platform": "string (lowercase: ebay, poshmark, mercari, depop, gumtree, facebook)",
+            "platform_name": "string (exact: eBay, Poshmark, Mercari, Depop, Gumtree, Facebook Marketplace)",
             "title": "string",
             "price": number (use market research pricing as guide),
             "condition": "string",
