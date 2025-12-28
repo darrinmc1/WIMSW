@@ -1,11 +1,11 @@
 export function BrandName({ className }: { className?: string }) {
     return (
         <span className={className}>
-            W<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-medium">hat</span>{" "}
-            I<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-medium">s</span>{" "}
-            M<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-medium">y</span>{" "}
-            S<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-medium">tuff</span>{" "}
-            W<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-medium">orth</span>
+            <span className="text-white">W</span><span className="text-cyan-400 font-medium">hat</span>{" "}
+            <span className="text-white">I</span><span className="text-cyan-400 font-medium">s</span>{" "}
+            <span className="text-white">M</span><span className="text-cyan-400 font-medium">y</span>{" "}
+            <span className="text-white">S</span><span className="text-cyan-400 font-medium">tuff</span>{" "}
+            <span className="text-white">W</span><span className="text-cyan-400 font-medium">orth</span>
         </span>
     )
 }
