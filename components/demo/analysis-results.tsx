@@ -129,7 +129,10 @@ export function AnalysisResults({ isAnalyzed, analysis }: AnalysisResultsProps) 
 
             {/* Listings & Instructions */}
             <div className="space-y-4">
-                <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider text-muted-foreground">Generated Listings & Settings</h4>
+                <h4 className="font-bold text-lg text-primary uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5" />
+                    Recommended Listings & Settings
+                </h4>
                 {analysis.platforms.map((platform) => (
                     <Card key={platform.name} className={`overflow-hidden transition-all duration-300 ${expandedPlatform === platform.name ? "ring-2 ring-primary/50" : "hover:border-primary/50"}`}>
                         <div
