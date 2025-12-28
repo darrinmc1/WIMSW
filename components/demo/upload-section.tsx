@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useRef } from "react"
 import NextImage from "next/image"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Camera, X, Lightbulb } from "lucide-react"
+import { Camera, X, Lightbulb, Info } from "lucide-react"
 import { PhotoSlot, PhotoCategory } from "./types"
 import { resizeImage } from "@/lib/image-utils"
 import { PhotoTipsModal } from "@/components/photo-guidance/photo-tips-modal"
@@ -32,19 +32,35 @@ export function UploadSection({
 }: UploadSectionProps) {
     // Photo Tips Modal State
     const [showPhotoTips, setShowPhotoTips] = useState(false)
+    const pendingUploadRef = useRef<{ event: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory } | null>(null)
 
-    // Show photo tips on first visit to this section
-    useEffect(() => {
-        // Check if user has seen the tips before
+    const handlePhotoClick = (category: PhotoCategory) => {
+        // Check if user has seen tips before
         const hasSeenTips = localStorage.getItem('photoTipsShown')
+        
+        // If first time, show tips modal before upload
         if (!hasSeenTips) {
-            // Small delay so user sees the upload section first
-            const timer = setTimeout(() => {
-                setShowPhotoTips(true)
-            }, 1000)
-            return () => clearTimeout(timer)
+            // Store which photo slot they're trying to upload to
+            pendingUploadRef.current = { event: null as any, category }
+            setShowPhotoTips(true)
+            return false // Prevent file picker from opening
         }
-    }, [])
+        
+        return true // Allow upload to proceed
+    }
+
+    const handleModalClose = () => {
+        setShowPhotoTips(false)
+        // If user was trying to upload, trigger the file picker now
+        if (pendingUploadRef.current?.category) {
+            const category = pendingUploadRef.current.category
+            const input = document.getElementById(`photo-upload-${category}`) as HTMLInputElement
+            if (input) {
+                input.click()
+            }
+            pendingUploadRef.current = null
+        }
+    }
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
         const file = e.target.files?.[0]
@@ -89,37 +105,35 @@ export function UploadSection({
     }
 
     const hasMinimumPhotos = photos.find((p) => p.category === "front")?.image !== null
+    const hasAnyPhotos = photos.some((p) => p.image !== null)
 
     return (
         <>
-            {/* Photo Tips Modal - Shows on first visit */}
+            {/* Photo Tips Modal */}
             <PhotoTipsModal
                 open={showPhotoTips}
-                onClose={() => setShowPhotoTips(false)}
+                onClose={handleModalClose}
                 onDontShowAgain={() => {
                     localStorage.setItem('photoTipsShown', 'true')
                 }}
             />
 
             <Card className="p-6 bg-card border-border flex flex-col">
-                <h3 className="text-2xl font-semibold text-foreground mb-6">1. Upload Photos</h3>
-
-                <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20 mb-6 flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                        <strong className="block mb-1">💡 Pro Tip</strong>
-                        Clear lighting and brand tags help our AI identify precise models to maximize your profit.
-                    </div>
-                    {/* Button to manually show tips again */}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowPhotoTips(true)}
-                        className="shrink-0 text-xs h-auto py-1 px-2 hover:bg-primary/20"
-                    >
-                        <Lightbulb className="w-3 h-3 mr-1" />
-                        Photo Tips
-                    </Button>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-semibold text-foreground">1. Upload Photos</h3>
                 </div>
+
+                {/* Prominent Photo Tips Button - Above Upload Area */}
+                <Button
+                    onClick={() => setShowPhotoTips(true)}
+                    variant="outline"
+                    className="mb-4 w-full sm:w-auto border-2 border-primary/30 hover:border-primary hover:bg-primary/5 text-primary font-semibold transition-all"
+                    size="lg"
+                >
+                    <Lightbulb className="w-5 h-5 mr-2" />
+                    View Photo Tips for Better Results
+                    <Info className="w-4 h-4 ml-2 opacity-70" />
+                </Button>
 
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 flex-1 content-start">
                     {photos.map((photo) => (
@@ -144,7 +158,17 @@ export function UploadSection({
                                         </button>
                                     </>
                                 ) : (
-                                    <label htmlFor={`photo-upload-${photo.category}`} className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
+                                    <label 
+                                        htmlFor={`photo-upload-${photo.category}`} 
+                                        className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer"
+                                        onClick={(e) => {
+                                            // Check if we should show tips first
+                                            const shouldProceed = handlePhotoClick(photo.category)
+                                            if (!shouldProceed) {
+                                                e.preventDefault()
+                                            }
+                                        }}
+                                    >
                                         <input
                                             id={`photo-upload-${photo.category}`}
                                             type="file"
@@ -162,6 +186,13 @@ export function UploadSection({
                         </div>
                     ))}
                 </div>
+
+                {/* Helper text for first-time users */}
+                {!hasAnyPhotos && (
+                    <div className="mt-4 text-sm text-muted-foreground text-center bg-muted/30 rounded-lg p-3 border border-border">
+                        <strong className="text-foreground">💡 First time?</strong> Click the button above to see our photo tips for best results!
+                    </div>
+                )}
 
                 <div className="mt-6 space-y-4">
                     <div>
