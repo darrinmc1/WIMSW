@@ -1,15 +1,15 @@
-
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import NextImage from "next/image"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Camera, X } from "lucide-react"
+import { Camera, X, Lightbulb } from "lucide-react"
 import { PhotoSlot, PhotoCategory } from "./types"
 import { resizeImage } from "@/lib/image-utils"
+import { PhotoTipsModal } from "@/components/photo-guidance/photo-tips-modal"
 
 interface UploadSectionProps {
     photos: PhotoSlot[]
@@ -30,6 +30,21 @@ export function UploadSection({
     isAnalyzing,
     isAnalyzed
 }: UploadSectionProps) {
+    // Photo Tips Modal State
+    const [showPhotoTips, setShowPhotoTips] = useState(false)
+
+    // Show photo tips on first visit to this section
+    useEffect(() => {
+        // Check if user has seen the tips before
+        const hasSeenTips = localStorage.getItem('photoTipsShown')
+        if (!hasSeenTips) {
+            // Small delay so user sees the upload section first
+            const timer = setTimeout(() => {
+                setShowPhotoTips(true)
+            }, 1000)
+            return () => clearTimeout(timer)
+        }
+    }, [])
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, category: PhotoCategory) => {
         const file = e.target.files?.[0]
@@ -76,80 +91,103 @@ export function UploadSection({
     const hasMinimumPhotos = photos.find((p) => p.category === "front")?.image !== null
 
     return (
-        <Card className="p-6 bg-card border-border flex flex-col">
-            <h3 className="text-2xl font-semibold text-foreground mb-6">1. Upload Photos</h3>
+        <>
+            {/* Photo Tips Modal - Shows on first visit */}
+            <PhotoTipsModal
+                open={showPhotoTips}
+                onClose={() => setShowPhotoTips(false)}
+                onDontShowAgain={() => {
+                    localStorage.setItem('photoTipsShown', 'true')
+                }}
+            />
 
-            <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20 mb-6">
-                <strong className="block mb-1">💡 Pro Tip</strong>
-                Clear lighting and brand tags help our AI identify precise models to maximize your profit.
-            </div>
+            <Card className="p-6 bg-card border-border flex flex-col">
+                <h3 className="text-2xl font-semibold text-foreground mb-6">1. Upload Photos</h3>
 
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 flex-1 content-start">
-                {photos.map((photo) => (
-                    <div key={photo.category} className="space-y-2">
-                        <div className="text-sm font-medium text-foreground">{photo.label}</div>
-                        <div className="relative aspect-video bg-muted/50 rounded-lg border-2 border-dashed border-border hover:border-primary transition-all duration-300 group overflow-hidden">
-                            {photo.image ? (
-                                <>
-                                    <NextImage
-                                        src={photo.image}
-                                        alt={photo.label}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                        unoptimized
-                                    />
-                                    <button
-                                        onClick={() => handleRemovePhoto(photo.category)}
-                                        className="absolute top-1 right-1 h-10 w-10 flex items-center justify-center bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-white rounded-full shadow-md transition-colors"
-                                        aria-label="Remove photo"
-                                    >
-                                        <X size={18} className="currentColor" />
-                                    </button>
-                                </>
-                            ) : (
-                                <label htmlFor={`photo-upload-${photo.category}`} className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
-                                    <input
-                                        id={`photo-upload-${photo.category}`}
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => handlePhotoUpload(e, photo.category)}
-                                    />
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Camera className="text-primary" size={20} />
-                                    </div>
-                                    <span className="text-xs text-muted-foreground text-center px-2">{photo.description}</span>
-                                </label>
-                            )}
-                        </div>
+                <div className="bg-primary/10 rounded-lg p-4 text-sm text-primary border border-primary/20 mb-6 flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                        <strong className="block mb-1">💡 Pro Tip</strong>
+                        Clear lighting and brand tags help our AI identify precise models to maximize your profit.
                     </div>
-                ))}
-            </div>
-
-            <div className="mt-6 space-y-4">
-                <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">Optional Description</label>
-                    <Textarea
-                        placeholder="Add details like Size, Brand, Condition, or Defects to help AI give a better estimate..."
-                        value={userDescription}
-                        onChange={(e) => setUserDescription(e.target.value)}
-                        className="bg-card/50 resize-none min-h-[80px]"
-                    />
+                    {/* Button to manually show tips again */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPhotoTips(true)}
+                        className="shrink-0 text-xs h-auto py-1 px-2 hover:bg-primary/20"
+                    >
+                        <Lightbulb className="w-3 h-3 mr-1" />
+                        Photo Tips
+                    </Button>
                 </div>
 
-                <Button
-                    onClick={onAnalyze}
-                    disabled={!hasMinimumPhotos || isAnalyzing}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
-                >
-                    {isAnalyzing ? (
-                        <>
-                            <span className="inline-block animate-spin mr-2">⏳</span>
-                            Analyzing...
-                        </>
-                    ) : isAnalyzed ? "Re-Analyze Item" : "Analyze Market & Price"}
-                </Button>
-            </div>
-        </Card>
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 flex-1 content-start">
+                    {photos.map((photo) => (
+                        <div key={photo.category} className="space-y-2">
+                            <div className="text-sm font-medium text-foreground">{photo.label}</div>
+                            <div className="relative aspect-video bg-muted/50 rounded-lg border-2 border-dashed border-border hover:border-primary transition-all duration-300 group overflow-hidden">
+                                {photo.image ? (
+                                    <>
+                                        <NextImage
+                                            src={photo.image}
+                                            alt={photo.label}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                            unoptimized
+                                        />
+                                        <button
+                                            onClick={() => handleRemovePhoto(photo.category)}
+                                            className="absolute top-1 right-1 h-10 w-10 flex items-center justify-center bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-white rounded-full shadow-md transition-colors"
+                                            aria-label="Remove photo"
+                                        >
+                                            <X size={18} className="currentColor" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <label htmlFor={`photo-upload-${photo.category}`} className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer">
+                                        <input
+                                            id={`photo-upload-${photo.category}`}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handlePhotoUpload(e, photo.category)}
+                                        />
+                                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Camera className="text-primary" size={20} />
+                                        </div>
+                                        <span className="text-xs text-muted-foreground text-center px-2">{photo.description}</span>
+                                    </label>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 space-y-4">
+                    <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Optional Description</label>
+                        <Textarea
+                            placeholder="Add details like Size, Brand, Condition, or Defects to help AI give a better estimate..."
+                            value={userDescription}
+                            onChange={(e) => setUserDescription(e.target.value)}
+                            className="bg-card/50 resize-none min-h-[80px]"
+                        />
+                    </div>
+
+                    <Button
+                        onClick={onAnalyze}
+                        disabled={!hasMinimumPhotos || isAnalyzing}
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
+                    >
+                        {isAnalyzing ? (
+                            <>
+                                <span className="inline-block animate-spin mr-2">⏳</span>
+                                Analyzing...
+                            </>
+                        ) : isAnalyzed ? "Re-Analyze Item" : "Analyze Market & Price"}
+                    </Button>
+                </div>
+            </Card>
+        </>
     )
 }
