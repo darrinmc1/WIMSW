@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Check, Shield, Zap, RefreshCw, Lock, DollarSign, Users, Award, ShoppingCart, Loader2 } from "lucide-react"
 import { TrialBanner } from "@/components/trial-banner"
 import { MobileStickyAction } from "@/components/mobile-sticky-action"
+import { toast } from "sonner"
 import dynamic from "next/dynamic"
 
 // Lazy load modal - only loads when user clicks "Contact Sales"
@@ -14,34 +15,65 @@ const ContactSalesModal = dynamic(() => import("@/components/contact-sales-modal
   ssr: false
 })
 
+// Analytics helper
+const trackEvent = (eventName: string, properties: any = {}) => {
+  // Vercel Analytics
+  if (typeof window !== 'undefined' && (window as any).va) {
+    (window as any).va('track', eventName, properties)
+  }
+  
+  // Google Analytics (if configured)
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', eventName, {
+      ...properties,
+      event_category: 'pricing',
+      timestamp: new Date().toISOString()
+    })
+  }
+  
+  console.log('📊 Analytics:', eventName, properties)
+}
+
 export function Pricing() {
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null)
+  const [selectingTier, setSelectingTier] = useState<string | null>(null)
 
   const handleTierSelection = (tier: string) => {
+    setSelectingTier(tier)
+
+    // Track analytics
+    trackEvent('tier_selected', {
+      tier: tier,
+      source: 'pricing_page',
+    })
+
     // Check if user is logged in (Mock)
     const isLoggedIn = false // checkAuthStatus(); 
 
     if (!isLoggedIn) {
+      // Show loading toast
+      toast.loading('Redirecting to signup...')
+      
       // Redirect to signup with plan parameter
-      // console.log(`Redirecting to signup with plan: ${tier}`)
-      window.location.href = `/signup?plan=${tier}`
+      setTimeout(() => {
+        window.location.href = `/signup?plan=${tier}`
+      }, 500)
     } else {
       // Show upgrade modal or go to billing
+      toast.success('Opening upgrade options...')
       // console.log(`Showing upgrade modal for: ${tier}`)
-    }
-
-    // Track analytics (Mock)
-    if ((window as any).analytics) {
-      (window as any).analytics.track('Tier Selected', {
-        tier: tier,
-        source: 'pricing_page',
-        timestamp: new Date()
-      })
     }
   }
 
   const handleBuyPack = async (packSize: number, price: number) => {
     setPurchasingPack(packSize)
+
+    // Track analytics
+    trackEvent('credit_purchase_started', {
+      pack_size: packSize,
+      amount: price,
+      source: 'pricing_page',
+    })
 
     // Check authentication (Mock)
     const user = { id: "mock_user_id" } // checkAuthStatus();
@@ -49,7 +81,12 @@ export function Pricing() {
     if (!user) {
       // Save intended purchase and redirect to signup
       sessionStorage.setItem('pendingPurchase', JSON.stringify({ packSize, price }))
-      window.location.href = '/signup?returnTo=checkout'
+      
+      toast.loading('Redirecting to signup...')
+      
+      setTimeout(() => {
+        window.location.href = '/signup?returnTo=checkout'
+      }, 500)
       return
     }
 
@@ -67,26 +104,32 @@ export function Pricing() {
         })
       })
 
+      if (!response.ok) {
+        throw new Error('Failed to create checkout')
+      }
+
       const { checkoutUrl } = await response.json()
 
-      // Redirect to checkout (Mock)
-      // For demo purposes, we'll just go straight to success page if no checkoutUrl is provided by our mock API
       if (checkoutUrl) {
-        window.location.href = checkoutUrl
+        toast.loading('Redirecting to checkout...')
+        setTimeout(() => {
+          window.location.href = checkoutUrl
+        }, 500)
       } else {
         // Fallback for demo
-        window.location.href = `/success?credits=${packSize}`
-      }
-
-      // Track analytics
-      if ((window as any).analytics) {
-        (window as any).analytics.track('Credit Purchase Started', {
-          packSize: packSize,
-          amount: price
-        })
+        toast.success('Processing purchase...')
+        setTimeout(() => {
+          window.location.href = `/success?credits=${packSize}`
+        }, 1000)
       }
     } catch (error) {
-      alert('Error starting checkout. Please try again.')
+      console.error('Buy pack error:', error)
+      toast.error('Error starting checkout. Please try again.')
+      
+      trackEvent('credit_purchase_error', {
+        pack_size: packSize,
+        error: 'checkout_failed'
+      })
     } finally {
       setPurchasingPack(null)
     }
@@ -96,27 +139,30 @@ export function Pricing() {
     {
       id: "starter",
       name: "Starter",
-      price: "$19.99",
+      price: "$9",
+      regularPrice: "$18",
       period: "/month",
-      description: "Casual sellers & closet cleanouts",
+      description: "Perfect for beginners",
       features: [
-        "50 items per month (~2/day)",
+        "30 items per month (~1/day)",
         "Gemini 3 Pro AI Analysis",
         "All platform listings",
         "Email support",
         "Google Sheets export",
         "Bulk upload (5 items)",
       ],
-      popular: false,
+      popular: true,
+      badge: "🔥 BEST VALUE",
     },
     {
       id: "pro",
       name: "Pro",
-      price: "$39.99",
+      price: "$19",
+      regularPrice: "$39",
       period: "/month",
-      description: "Active resellers & side hustlers",
+      description: "For active resellers",
       features: [
-        "150 items per month (~5/day)",
+        "100 items per month (~3/day)",
         "Gemini 3 Pro AI Analysis",
         "Priority processing",
         "Analytics dashboard",
@@ -124,16 +170,18 @@ export function Pricing() {
         "API access (limited)",
         "Priority email support",
       ],
-      popular: true,
+      popular: false,
+      badge: "⭐ MOST POPULAR",
     },
     {
       id: "business",
       name: "Business",
-      price: "$99.99",
+      price: "$49",
+      regularPrice: "$99",
       period: "/month",
-      description: "Professional resellers & small stores",
+      description: "Professional sellers",
       features: [
-        "400 items per month (~13/day)",
+        "300 items per month (~10/day)",
         "Gemini 3 Pro AI Analysis",
         "Highest priority processing",
         "Full API access",
@@ -144,17 +192,12 @@ export function Pricing() {
         "White-label options",
       ],
       popular: false,
+      badge: null,
     },
   ]
 
-  const credits = [
-    { amount: 25, price: 9.99, unit: "$0.40/item", save: null, description: "Great for testing" },
-    { amount: 100, price: 34.99, unit: "$0.35/item", save: "Save 12%", description: "Most popular" },
-    { amount: 250, price: 74.99, unit: "$0.30/item", save: "Best Value - Save 25%", description: "Perfect for seasonal sellers" },
-  ]
-
   const comparisonFeatures = [
-    { name: "Items per month", trial: "10 (Total)", starter: "50", pro: "150", business: "400" },
+    { name: "Items per month", trial: "5 (Total)", starter: "30", pro: "100", business: "300" },
     { name: "AI Model", trial: "Gemini 3 Pro", starter: "Gemini 3 Pro", pro: "Gemini 3 Pro", business: "Gemini 3 Pro" },
     { name: "Processing Speed", trial: "Standard", starter: "Standard", pro: "Priority", business: "Highest Priority" },
     { name: "Support Level", trial: "None", starter: "Email", pro: "Priority Email", business: "24/7 Priority" },
@@ -172,11 +215,17 @@ export function Pricing() {
 
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
+          <div className="inline-block px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-full mb-4 shadow-lg animate-pulse">
+            🚀 LAUNCH SPECIAL - 50% OFF ALL PLANS
+          </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground text-balance">
             Smart AI Pricing for <span className="text-gradient">Resellers</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Start with <span className="text-secondary font-semibold">10 free analyses</span>. No credit card required.
+            Start with <span className="text-secondary font-semibold">5 free analyses</span>. Then just <span className="text-primary font-bold">$9/month</span>!
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Lock in these prices before they increase 🔒
           </p>
         </div>
 
@@ -193,19 +242,28 @@ export function Pricing() {
                 : "bg-card/30 backdrop-blur-sm border-border hover:border-border/80"
                 }`}
             >
-              {tier.popular && (
+              {tier.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-semibold rounded-full shadow-lg whitespace-nowrap">
-                  MOST POPULAR
+                  {tier.badge}
                 </div>
               )}
 
-              <div className="space-y-6 flex-1">
+              {/* Launch Special Badge */}
+              <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                50% OFF
+              </div>
+
+              <div className="space-y-6 flex-1 mt-4">
                 <div>
                   <h3 className="text-2xl font-bold text-foreground mb-1">{tier.name}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
-                  <div className="flex items-baseline gap-1">
+                  <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-4xl font-bold text-foreground">{tier.price}</span>
                     <span className="text-muted-foreground">{tier.period}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="line-through text-muted-foreground">{tier.regularPrice}/mo</span>
+                    <span className="text-green-600 font-semibold">Save 50%</span>
                   </div>
                 </div>
 
@@ -225,60 +283,26 @@ export function Pricing() {
                 ) : (
                   <Button
                     onClick={() => handleTierSelection(tier.id)}
+                    disabled={selectingTier === tier.id}
                     className={`w-full font-bold h-12 text-lg ${tier.popular
                       ? "bg-indigo-600 hover:bg-indigo-700 text-white glow-effect"
                       : "bg-indigo-600 hover:bg-indigo-700 text-white"
                       }`}
                     size="lg"
                   >
-                    Start Free Trial
+                    {selectingTier === tier.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Start Free Trial"
+                    )}
                   </Button>
                 )}
               </div>
             </Card>
           ))}
-        </div>
-
-        {/* Credit Packs */}
-        <div className="max-w-5xl mx-auto mb-20">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold mb-2">Pay-As-You-Go Credits</h3>
-            <p className="text-muted-foreground">Great for testing or seasonal sellers. Credits never expire.</p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {credits.map((pack, i) => (
-              <Card key={i} className="p-6 bg-card/30 backdrop-blur-sm border-border flex flex-col items-center text-center hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg relative overflow-hidden">
-                {pack.save && (
-                  <div className="absolute top-0 right-0 p-4">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${pack.amount === 250 ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700'}`}>
-                      {pack.save}
-                    </span>
-                  </div>
-                )}
-
-                <div className="mt-4 text-4xl font-bold mb-1">${pack.price}</div>
-                <div className="text-xl font-medium text-foreground mb-1">{pack.amount} Credits</div>
-                <div className="text-sm text-gray-500 mb-4">{pack.unit}</div>
-
-                <Button
-                  onClick={() => handleBuyPack(pack.amount, pack.price)}
-                  disabled={purchasingPack === pack.amount}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 pt-3 h-auto rounded-lg shadow hover:scale-105 transition-all"
-                >
-                  {purchasingPack === pack.amount ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      Buy Pack
-                    </>
-                  )}
-                </Button>
-              </Card>
-            ))}
-          </div>
         </div>
 
         {/* Feature Comparison Table */}
@@ -344,8 +368,11 @@ export function Pricing() {
           </div>
         </div>
         <MobileStickyAction
-          text="Start 10-Day Free Trial"
-          onClick={() => window.location.href = "/signup?plan=pro"}
+          text="Start 5 FREE Analyses"
+          onClick={() => {
+            trackEvent('mobile_sticky_clicked', { source: 'pricing_page' })
+            window.location.href = "/signup?plan=trial"
+          }}
         />
       </div>
     </section>

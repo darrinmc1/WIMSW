@@ -16,21 +16,12 @@ export function Hero() {
   ]
 
   const [index, setIndex] = useState(0)
-  const [itemsValued, setItemsValued] = useState(2847)
 
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % headings.length)
     }, 4000)
     return () => clearInterval(timer)
-  }, [])
-
-  // Quick Win #2: Live item counter
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setItemsValued(prev => prev + Math.floor(Math.random() * 3))
-    }, 15000) // Update every 15 seconds
-    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -92,32 +83,7 @@ export function Hero() {
               </Link>
             </div>
 
-            {/* Quick Win #1: Trust Badges */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-sm text-muted-foreground/80 pt-2">
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-base">✓</span>
-                <span className="font-medium">No credit card required</span>
-              </div>
-              <div className="hidden sm:block text-muted-foreground/40">•</div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-base">✓</span>
-                <span className="font-medium">Cancel anytime</span>
-              </div>
-              <div className="hidden sm:block text-muted-foreground/40">•</div>
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400 text-base">⚡</span>
-                <span className="font-medium">30-second analysis</span>
-              </div>
-            </div>
-
-            {/* Quick Win #2: Live Item Counter */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-400/20 backdrop-blur-sm">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-muted-foreground">
-                <span className="font-bold text-white">{itemsValued.toLocaleString()}</span> items valued today
-              </span>
-            </div>
-
+            {/* Stats block removed as requested */}
             {/* Add mobile hero image */}
             <div className="relative lg:hidden mt-8 group">
               <div className="relative glass-panel rounded-2xl p-2">
@@ -145,7 +111,7 @@ export function Hero() {
                   width={600}
                   height={600}
                   className="w-full h-auto transform group-hover:scale-105 transition-transform duration-700 ease-out"
-                  sizes="(max-width: 1024px) 0px, 600px"
+                  sizes="(max-width: 1024px) 0px, 600px" // Don't download on mobile (0px), else 600px
                   priority={false}
                 />
 

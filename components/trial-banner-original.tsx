@@ -41,18 +41,7 @@ export function TrialBanner() {
 
                     <div className="text-center md:text-left">
                         <h3 className="text-2xl font-bold text-gray-800 mb-1">Start with 5 Free Analyses</h3>
-                        
-                        {/* Updated with Quick Win #1 */}
-                        <div className="flex flex-col sm:flex-row items-center gap-2 text-gray-600 font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-600">✓</span>
-                            <span>No Credit Card</span>
-                          </div>
-                          <div className="hidden sm:block">•</div>
-                          <span>Then Just $9/mo</span>
-                          <div className="hidden sm:block">•</div>
-                          <span>Lock In Low Pricing</span>
-                        </div>
+                        <p className="text-gray-600 font-medium">No Credit Card • Then Just $9/mo • Lock In Low Pricing</p>
                     </div>
                 </div>
 
@@ -74,9 +63,6 @@ export function TrialBanner() {
                             <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </Link>
-                    
-                    {/* Additional trust element */}
-                    <p className="text-xs text-gray-500 mt-2">Cancel anytime • No commitment</p>
                 </div>
 
                 {/* Decorative Background Elements */}
