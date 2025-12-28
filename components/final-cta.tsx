@@ -96,7 +96,7 @@ export function FinalCTA() {
         </form>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-indigo-200/80">
-          <span>✓ No credit card required</span>
+          <span>✓ No credit card required to test</span>
           <span className="hidden sm:inline">•</span>
           <span>✓ 5 free analyses</span>
           <span className="hidden sm:inline">•</span>

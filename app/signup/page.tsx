@@ -122,7 +122,7 @@ function SignupContent() {
                     <div className="flex flex-col items-center gap-3 mt-3">
                         <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-700 bg-green-50 py-1.5 px-3 rounded-full w-fit">
                             <CreditCard size={14} />
-                            <span>No credit card required</span>
+                            <span>No credit card required to test</span>
                         </div>
                     </div>
                 </div>
